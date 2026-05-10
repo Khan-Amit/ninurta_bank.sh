@@ -56,6 +56,15 @@
         }
         button.primary { background: #2a4a7a; }
         button.warning { background: #5a3a2a; }
+        input {
+            background: #010410;
+            border: 1px solid #2a3a60;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 2rem;
+            margin: 0.25rem;
+            font-family: monospace;
+        }
         .terminal {
             background: #010410;
             border-radius: 1rem;
@@ -95,13 +104,13 @@
     </div>
 
     <div class="grid">
-        <!-- LEFT PANEL: IMEI Security + Balance -->
+        <!-- LEFT PANEL -->
         <div class="panel security-panel">
             <h3>🔐 IMEI SECURITY VAULT</h3>
             <div id="authStatus" class="locked">🔒 VAULT LOCKED</div>
             <div id="imeiStatus" class="imei-status">📱 Detecting device...</div>
             
-            <div id="loginSection" style="margin: 1rem 0;">
+            <div style="margin: 1rem 0;">
                 <button id="loginBtn" class="primary">🔓 LOGIN WITH THIS DEVICE</button>
                 <button id="resetDeviceBtn" class="warning">🔄 RESET DEVICE (Admin)</button>
             </div>
@@ -115,7 +124,7 @@
             </div>
         </div>
 
-        <!-- RIGHT PANEL: Actions -->
+        <!-- RIGHT PANEL -->
         <div class="panel">
             <h3>⚡ ATM FUNCTIONS</h3>
             <div>
@@ -141,13 +150,12 @@
 
 <script>
     // ============================================================
-    // IMEI-BASED AUTHENTICATION (FIXED)
+    // IMEI-BASED AUTHENTICATION (WORKING)
     // ============================================================
     const BTC_ADDR = "bc1qk7ajtrgplvn25600wm7gx9u5c5nk8kz9dfpcqy";
     let unlocked = false;
     let btcBalance = 0;
     let btcRate = 1800000;
-    let currentDeviceId = null;
 
     function addLog(msg) {
         let term = document.getElementById('terminal');
@@ -159,7 +167,7 @@
         if(term.children.length > 50) term.removeChild(term.children[0]);
     }
 
-    // Generate a stable device fingerprint
+    // Device fingerprint
     async function getDeviceFingerprint() {
         let screen = `${screen.width}x${screen.height}x${screen.colorDepth}`;
         let timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -186,7 +194,6 @@
     async function registerAndUnlock() {
         let deviceId = await getDeviceFingerprint();
         setDeviceId(deviceId);
-        currentDeviceId = deviceId;
         unlocked = true;
         document.getElementById('imeiStatus').innerHTML = `📱 Device registered: ${deviceId.substring(0,12)}...`;
         document.getElementById('authStatus').innerHTML = '🔓 VAULT UNLOCKED';
@@ -199,11 +206,10 @@
     async function verifyAndUnlock() {
         let storedId = getStoredDeviceId();
         if(!storedId) {
-            addLog(`⚡ No device registered. Click LOGIN to register this device.`);
+            addLog(`⚡ No device registered. Click LOGIN to register.`);
             return false;
         }
         let currentId = await getDeviceFingerprint();
-        currentDeviceId = currentId;
         document.getElementById('imeiStatus').innerHTML = `📱 Device ID: ${currentId.substring(0,12)}...`;
         if(storedId === currentId) {
             unlocked = true;
@@ -214,7 +220,7 @@
             fetchBalance();
             return true;
         } else {
-            addLog(`❌ DEVICE MISMATCH — This device is not authorized`);
+            addLog(`❌ DEVICE MISMATCH — Unauthorized device`);
             return false;
         }
     }
@@ -229,7 +235,7 @@
     }
 
     function resetDevice() {
-        if(confirm("⚠️ WARNING: Resetting will remove the device lock. Continue?")) {
+        if(confirm("⚠️ WARNING: Reset device lock? You will need to re-register.")) {
             localStorage.removeItem('ninurta_device_id');
             unlocked = false;
             document.getElementById('authStatus').innerHTML = '🔒 VAULT LOCKED';
@@ -268,7 +274,7 @@
 
     function withdrawBank() {
         if(!unlocked) { addLog(`⛔ VAULT LOCKED`); return; }
-        addLog(`🏦 Withdrawal: Bitkub → Wallet → THB → Withdraw to your bank`);
+        addLog(`🏦 Withdrawal: Bitkub → Wallet → THB → Withdraw to bank`);
     }
 
     function generateQR() {
@@ -297,12 +303,12 @@
     document.getElementById('qrBtn').onclick = generateQR;
     document.getElementById('licenseBtn').onclick = showLicense;
 
-    // Initialize status display
+    // Initialize
     (async function init() {
         let storedId = getStoredDeviceId();
         if(storedId) {
             document.getElementById('imeiStatus').innerHTML = `📱 Device registered. Click LOGIN to unlock.`;
-            addLog(`🔐 Device registered. Click LOGIN to unlock vault.`);
+            addLog(`🔐 Device registered. Click LOGIN to unlock.`);
         } else {
             document.getElementById('imeiStatus').innerHTML = `📱 No device registered. Click LOGIN to set up.`;
             addLog(`⚡ No device registered. Click LOGIN to set this device as master.`);
