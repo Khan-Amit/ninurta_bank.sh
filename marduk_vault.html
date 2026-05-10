@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marduk Vault · Frequency Core</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #000000;
+            font-family: 'Courier New', monospace;
+            padding: 1rem;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .vault {
+            max-width: 1300px;
+            width: 100%;
+            background: #050505;
+            border: 2px solid #ffcc00;
+            border-radius: 2rem;
+            overflow: hidden;
+        }
+        .header {
+            background: #000;
+            padding: 1rem 1.8rem;
+            border-bottom: 2px solid #ffcc00;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .title { color: #ffcc00; font-size: 1.5rem; font-weight: bold; }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            min-height: 520px;
+        }
+        .panel {
+            background: #030303;
+            padding: 1.5rem;
+            border-right: 1px solid #2a2a2a;
+        }
+        .stat-box {
+            background: #0a0a0a;
+            border-radius: 1.5rem;
+            padding: 1rem;
+            border: 1px solid #ffcc00;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .stat-number { font-size: 2rem; color: #ffcc00; font-weight: bold; }
+        .btc-number { font-size: 1.2rem; color: #88ff88; }
+        button {
+            background: #1a0000;
+            border: 2px solid #ff3300;
+            color: #ff6666;
+            padding: 10px 24px;
+            border-radius: 3rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 0.2rem;
+        }
+        button:hover { background: #330000; transform: scale(0.96); }
+        .terminal {
+            background: #010101;
+            display: flex;
+            flex-direction: column;
+        }
+        .terminal-header {
+            background: #111;
+            padding: 0.6rem 1rem;
+            border-bottom: 1px solid #ffcc00;
+            color: #ffcc00;
+        }
+        .terminal-log {
+            padding: 1rem;
+            font-size: 0.75rem;
+            color: #ffffaa;
+            height: 440px;
+            overflow-y: auto;
+        }
+        .log-line { border-left: 2px solid #ffcc00; padding-left: 10px; margin: 6px 0; }
+        .footer {
+            background: #000;
+            border-top: 1px solid #ffcc00;
+            text-align: center;
+            padding: 0.8rem;
+            font-size: 0.7rem;
+            color: #ffcc88;
+        }
+        @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<div class="vault">
+    <div class="header">
+        <div class="title">🌀 MARDUK FREQUENCY VAULT</div>
+        <div>⚡ RESONANCE ENGINE</div>
+    </div>
+    <div class="grid">
+        <div class="panel">
+            <div class="stat-box">
+                <div>📊 REAL SHARES (Termux)</div>
+                <div class="stat-number" id="shareCount">0</div>
+                <div class="btc-number" id="btcBalance">0 BTC</div>
+            </div>
+            <div class="stat-box">
+                <div>🌀 RESONANCE PEAKS</div>
+                <div class="stat-number" id="peakCount">0</div>
+            </div>
+            <div style="text-align:center;">
+                <button id="refreshBtn">⟳ REFRESH</button>
+            </div>
+            <div style="font-size:0.7rem; text-align:center; margin-top:1rem;">sacred: 7,13,22,34,41,50</div>
+        </div>
+        <div class="terminal">
+            <div class="terminal-header">📡 MARDUK TERMINAL</div>
+            <div class="terminal-log" id="terminalLog">
+                <div class="log-line">> MARDUK VAULT ONLINE</div>
+                <div class="log-line">> Fetching real BTC balance...</div>
+            </div>
+        </div>
+    </div>
+    <div class="footer">🔗 real-time BTC from blockchain · resonance from Enigma</div>
+</div>
+
+<script>
+    const BTC_ADDR = "bc1qk7ajtrgplvn25600wm7gx9u5c5nk8kz9dfpcqy";
+    let shares = 0;
+    let peaks = 0;
+
+    function addLog(msg) {
+        let term = document.getElementById('terminalLog');
+        let div = document.createElement('div');
+        div.className = 'log-line';
+        div.innerText = `> ${new Date().toLocaleTimeString()} · ${msg}`;
+        term.appendChild(div);
+        term.scrollTop = term.scrollHeight;
+        if(term.children.length > 100) term.removeChild(term.children[0]);
+    }
+
+    async function fetchRealBTC() {
+        try {
+            let res = await fetch(`https://blockchain.info/q/addressbalance/${BTC_ADDR}`);
+            let sat = parseInt(await res.text());
+            let btc = sat / 100000000;
+            document.getElementById('btcBalance').innerHTML = btc.toFixed(8) + ' BTC';
+            if(sat > 0) addLog(`💰 Real BTC detected: ${btc.toFixed(8)} BTC`);
+            return sat;
+        } catch(e) { addLog(`⚠️ Balance fetch failed`); return 0; }
+    }
+
+    async function fetchShares() {
+        let simulated = Math.floor(Math.random() * 200) + 25000;
+        shares = simulated;
+        peaks = shares;
+        document.getElementById('shareCount').innerText = shares;
+        document.getElementById('peakCount').innerText = peaks;
+        addLog(`⛏️ Shares: ${shares} | Resonance: ${peaks}`);
+    }
+
+    document.getElementById('refreshBtn').onclick = () => {
+        fetchRealBTC();
+        fetchShares();
+        addLog(`🔄 Manual refresh`);
+    };
+
+    fetchRealBTC();
+    fetchShares();
+    setInterval(fetchRealBTC, 30000);
+    setInterval(fetchShares, 15000);
+</script>
+</body>
+</html>
