@@ -1,99 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ninurta Bank · IMEI Vault</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            background: #0a0e1a;
-            font-family: 'Courier New', monospace;
-            padding: 1rem;
-            min-height: 100vh;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .header {
-            background: #0f1322;
-            padding: 1rem 2rem;
-            border-radius: 2rem 2rem 0 0;
-            border-bottom: 2px solid #ffcc00;
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
-        }
-        .title { color: #ffcc00; font-size: 1.5rem; font-weight: bold; }
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-        .panel {
-            background: #0f1322;
-            border-radius: 1.5rem;
-            padding: 1.5rem;
-            border: 1px solid #2a3a60;
-        }
-        .security-panel {
-            background: #0a0e1a;
-            border: 2px solid #ff3300;
-        }
-        .locked { color: #ff6666; }
-        .unlocked { color: #88ff88; }
-        button {
-            background: #1f2c46;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 2rem;
-            color: white;
-            cursor: pointer;
-            margin: 0.25rem;
-            font-family: monospace;
-        }
-        button.primary { background: #2a4a7a; }
-        input {
-            background: #010410;
-            border: 1px solid #2a3a60;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 2rem;
-            margin: 0.25rem;
-            font-family: monospace;
-        }
-        .terminal {
-            background: #010410;
-            border-radius: 1rem;
-            padding: 1rem;
-            font-size: 0.7rem;
-            color: #88ffaa;
-            height: 300px;
-            overflow-y: auto;
-        }
-        .log-line {
-            border-left: 2px solid #ffcc00;
-            padding-left: 8px;
-            margin: 4px 0;
-        }
-        .footer {
-            text-align: center;
-            margin-top: 1rem;
-            padding: 1rem;
-            font-size: 0.7rem;
-            color: #8da0c0;
-        }
-        .imei-status {
-            font-size: 0.7rem;
-            margin-top: 10px;
-            padding: 5px;
-            background: #010410;
-            border-radius: 1rem;
-        }
-        @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
-    </style>
+
 </head>
 <body>
 <div class="container">
@@ -336,7 +241,7 @@
                 addLog(`⚠️ This device is not the registered master device.`);
             }
         } else {
-            addLog(`⚡ No device registered. Click LOGIN to set this device as master.`);
+ registered. Click LOGIN to set this device as master.`);
         }
     })();
 </script>
