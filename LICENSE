@@ -1,7 +1,21 @@
-MIT License
-
-Copyright (c) 2026 ENKI 
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ninurta Bank · License</title>
+    <style>
+        body { background: #0a0e1a; font-family: monospace; color: #eef2ff; padding: 2rem; }
+        .container { max-width: 800px; margin: 0 auto; background: #0f1322; border-radius: 2rem; padding: 2rem; border: 1px solid #ffcc00; }
+        h1 { color: #ffcc00; }
+        pre { background: #010410; padding: 1rem; border-radius: 1rem; overflow-x: auto; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>📜 MIT License</h1>
+    <p>Copyright (c) 2025 Khan-Amit</p>
+    <pre>
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -19,3 +33,8 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+    </pre>
+    <a href="index.html" style="color: #ffcc00;">← Back to ATM</a>
+</div>
+</body>
+</html>
