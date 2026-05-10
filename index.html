@@ -3,33 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ninurta Bank · Crypto to THB Bridge</title>
+    <title>Ninurta Bank · Crypto ATM</title>
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: #0a0e1a;
             font-family: 'Courier New', monospace;
-            color: #eef2ff;
-            padding: 2rem;
-            text-align: center;
+            padding: 1rem;
+            min-height: 100vh;
         }
         .container {
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
-            background: #0f1322;
-            border-radius: 2rem;
-            border: 1px solid #ffcc00;
-            padding: 2rem;
         }
-        h1 { color: #ffcc00; }
-        .cmd {
-            background: #010410;
-            padding: 1rem;
-            border-radius: 1rem;
-            font-family: monospace;
-            text-align: left;
-            margin: 1rem 0;
+        /* Header */
+        .header {
+            background: #0f1322;
+            padding: 1rem 2rem;
+            border-radius: 2rem 2rem 0 0;
+            border-bottom: 2px solid #ffcc00;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .title { color: #ffcc00; font-size: 1.5rem; font-weight: bold; }
+        /* Main Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        /* Panels */
+        .panel {
+            background: #0f1322;
+            border-radius: 1.5rem;
+            padding: 1.5rem;
             border: 1px solid #2a3a60;
         }
+        .panel h3 { color: #ffcc00; margin-bottom: 1rem; }
+        /* Security Panel */
+        .security-panel {
+            background: #0a0e1a;
+            border: 2px solid #ff3300;
+        }
+        .locked { color: #ff6666; }
+        .unlocked { color: #88ff88; }
+        /* Buttons */
         button {
             background: #1f2c46;
             border: none;
@@ -37,31 +57,220 @@
             border-radius: 2rem;
             color: white;
             cursor: pointer;
+            margin: 0.25rem;
+            font-family: monospace;
         }
-        button:hover { background: #2b3d64; }
+        button.primary { background: #2a4a7a; }
+        button.warning { background: #5a3a2a; }
+        button.danger { background: #8a2a2a; }
+        button:hover { transform: scale(0.98); opacity: 0.9; }
+        /* Input */
+        input, select {
+            background: #010410;
+            border: 1px solid #2a3a60;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 2rem;
+            margin: 0.25rem;
+            font-family: monospace;
+        }
+        /* Terminal */
+        .terminal {
+            background: #010410;
+            border-radius: 1rem;
+            padding: 1rem;
+            font-size: 0.7rem;
+            color: #88ffaa;
+            height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+        }
+        .log-line {
+            border-left: 2px solid #ffcc00;
+            padding-left: 8px;
+            margin: 4px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 1rem;
+            padding: 1rem;
+            font-size: 0.7rem;
+            color: #8da0c0;
+        }
+        @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 <div class="container">
-    <h1>🏦 NINURTA BANK ATM</h1>
-    <p>Bitcoin → Thai Baht Bridge | No Swift. No Middlemen.</p>
-    <hr>
-    <h3>⚡ Run the ATM on your terminal</h3>
-    <div class="cmd">
-        $ git clone https://github.com/Khan-Amit/ninurta_bank.git<br>
-        $ cd ninurta_bank<br>
-        $ chmod +x ninurta_bank.sh<br>
-        $ ./ninurta_bank.sh
+    <div class="header">
+        <div class="title">🏦 NINURTA BANK ATM</div>
+        <div>Bitcoin → Thai Baht Bridge | No Swift</div>
     </div>
-    <p>Then follow the interactive menu to:</p>
-    <ul style="text-align: left; display: inline-block;">
-        <li>✅ Check real BTC balance</li>
-        <li>✅ Sell BTC for THB</li>
-        <li>✅ Withdraw to any Thai bank</li>
-        <li>✅ Generate PromptPay QR</li>
-    </ul>
-    <br>
-    <button onclick="window.location.href='https://github.com/Khan-Amit/ninurta_bank'">📂 View on GitHub</button>
+
+    <div class="grid">
+        <!-- LEFT PANEL: Security + Balance -->
+        <div class="panel security-panel">
+            <h3>🔐 SECURITY VAULT</h3>
+            <div id="authStatus" class="locked">🔒 VAULT LOCKED</div>
+            <div class="input-group" style="margin: 1rem 0;">
+                <input type="password" id="pinInput" placeholder="Enter PIN (4-6 digits)">
+                <button id="unlockBtn" class="primary">🔓 UNLOCK</button>
+            </div>
+            <div id="balanceDisplay" style="display:none;">
+                <hr>
+                <h4>💰 YOUR BALANCE</h4>
+                <div>₿ <span id="btcBalance">0.00000000</span> BTC</div>
+                <div>฿ <span id="thbBalance">0.00</span> THB</div>
+                <div>📊 Rate: 1 BTC = ฿ <span id="btcRate">1,800,000</span></div>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL: Actions -->
+        <div class="panel">
+            <h3>⚡ ATM FUNCTIONS</h3>
+            <div>
+                <button id="refreshBtn" class="primary">⟳ REFRESH BALANCE</button>
+                <button id="sellBtn">💰 SELL BTC → THB</button>
+                <button id="withdrawBtn">🏦 WITHDRAW TO BANK</button>
+                <button id="qrBtn">📱 GENERATE QR</button>
+                <button id="licenseBtn">📜 LICENSE</button>
+            </div>
+            <hr style="margin: 1rem 0;">
+            <div class="terminal" id="terminal">
+                <div class="log-line">> NINURTA BANK ATM v1.0</div>
+                <div class="log-line">> Enter PIN to unlock</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <span id="licenseText">MIT License · No Warranty</span>
+    </div>
 </div>
+
+<script>
+    // ============================================================
+    // SECURITY: PIN LOCK (stored in localStorage)
+    // ============================================================
+    const BTC_ADDR = "bc1qk7ajtrgplvn25600wm7gx9u5c5nk8kz9dfpcqy";
+    let unlocked = false;
+    let btcBalance = 0;
+    let btcRate = 1800000;
+
+    function addLog(msg) {
+        let term = document.getElementById('terminal');
+        let div = document.createElement('div');
+        div.className = 'log-line';
+        div.innerText = `> ${new Date().toLocaleTimeString()} · ${msg}`;
+        term.appendChild(div);
+        term.scrollTop = term.scrollHeight;
+        if(term.children.length > 50) term.removeChild(term.children[0]);
+    }
+
+    // PIN management
+    function getStoredPin() {
+        return localStorage.getItem('ninurta_pin');
+    }
+
+    function setPin(pin) {
+        localStorage.setItem('ninurta_pin', pin);
+        addLog(`🔐 PIN set successfully`);
+    }
+
+    function verifyPin(pin) {
+        let stored = getStoredPin();
+        if(!stored) {
+            setPin(pin);
+            return true;
+        }
+        return stored === pin;
+    }
+
+    // Fetch real BTC balance
+    async function fetchBalance() {
+        try {
+            let res = await fetch(`https://blockchain.info/q/addressbalance/${BTC_ADDR}`);
+            let sat = parseInt(await res.text());
+            btcBalance = sat / 100000000;
+            document.getElementById('btcBalance').innerText = btcBalance.toFixed(8);
+            
+            let rateRes = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=thb');
+            let rateData = await rateRes.json();
+            btcRate = rateData.bitcoin?.thb || 1800000;
+            document.getElementById('btcRate').innerText = btcRate.toLocaleString();
+            
+            let thb = btcBalance * btcRate;
+            document.getElementById('thbBalance').innerText = thb.toFixed(2);
+            addLog(`💰 Balance: ${btcBalance.toFixed(8)} BTC (฿${thb.toFixed(2)})`);
+        } catch(e) {
+            addLog(`⚠️ Failed to fetch balance`);
+        }
+    }
+
+    // Unlock vault
+    function unlock(pin) {
+        if(verifyPin(pin)) {
+            unlocked = true;
+            document.getElementById('authStatus').innerHTML = '🔓 VAULT UNLOCKED';
+            document.getElementById('authStatus').className = 'unlocked';
+            document.getElementById('balanceDisplay').style.display = 'block';
+            addLog(`✅ VAULT UNLOCKED`);
+            fetchBalance();
+        } else {
+            addLog(`❌ WRONG PIN`);
+        }
+    }
+
+    // Actions
+    function sellBTC() {
+        if(!unlocked) { addLog(`⛔ VAULT LOCKED`); return; }
+        addLog(`💱 Selling ${btcBalance.toFixed(8)} BTC for ฿${(btcBalance*btcRate).toFixed(2)}`);
+        addLog(`📌 Manual step: Send BTC to Bitkub → Trade → Withdraw to bank`);
+    }
+
+    function withdrawBank() {
+        if(!unlocked) { addLog(`⛔ VAULT LOCKED`); return; }
+        addLog(`🏦 Withdrawal guide: Bitkub → Wallet → THB → Withdraw → Your bank account`);
+    }
+
+    function generateQR() {
+        let amount = prompt("Enter amount in THB for QR:");
+        if(amount && !isNaN(amount)) {
+            let phone = prompt("Enter your PromptPay phone number:");
+            if(phone) {
+                let qrUrl = `https://promptpay.io/${phone}/${amount}`;
+                addLog(`📱 QR Code for ฿${amount}`);
+                window.open(`https://quickchart.io/qr?text=${encodeURIComponent(qrUrl)}&size=200`, '_blank');
+            }
+        }
+    }
+
+    function showLicense() {
+        alert("Ninurta Bank ATM\nMIT License\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software...\n\nNo warranty. Use at your own risk.");
+        addLog(`📜 License viewed`);
+    }
+
+    // Event listeners
+    document.getElementById('unlockBtn').onclick = () => {
+        let pin = document.getElementById('pinInput').value;
+        if(pin) unlock(pin);
+        else addLog(`⛔ Enter PIN`);
+    };
+    document.getElementById('refreshBtn').onclick = () => {
+        if(unlocked) fetchBalance();
+        else addLog(`⛔ VAULT LOCKED`);
+    };
+    document.getElementById('sellBtn').onclick = sellBTC;
+    document.getElementById('withdrawBtn').onclick = withdrawBank;
+    document.getElementById('qrBtn').onclick = generateQR;
+    document.getElementById('licenseBtn').onclick = showLicense;
+
+    // Check if PIN exists
+    if(!getStoredPin()) {
+        addLog(`⚡ FIRST LOGIN: Set a PIN to secure your vault`);
+    } else {
+        addLog(`🔐 VAULT LOCKED · Enter PIN to unlock`);
+    }
+</script>
 </body>
 </html>
