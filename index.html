@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ninurta Bank · Crypto to THB Bridge</title>
+    <style>
+        body {
+            background: #0a0e1a;
+            font-family: 'Courier New', monospace;
+            color: #eef2ff;
+            padding: 2rem;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #0f1322;
+            border-radius: 2rem;
+            border: 1px solid #ffcc00;
+            padding: 2rem;
+        }
+        h1 { color: #ffcc00; }
+        .cmd {
+            background: #010410;
+            padding: 1rem;
+            border-radius: 1rem;
+            font-family: monospace;
+            text-align: left;
+            margin: 1rem 0;
+            border: 1px solid #2a3a60;
+        }
+        button {
+            background: #1f2c46;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 2rem;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover { background: #2b3d64; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🏦 NINURTA BANK ATM</h1>
+    <p>Bitcoin → Thai Baht Bridge | No Swift. No Middlemen.</p>
+    <hr>
+    <h3>⚡ Run the ATM on your terminal</h3>
+    <div class="cmd">
+        $ git clone https://github.com/Khan-Amit/ninurta_bank.git<br>
+        $ cd ninurta_bank<br>
+        $ chmod +x ninurta_bank.sh<br>
+        $ ./ninurta_bank.sh
+    </div>
+    <p>Then follow the interactive menu to:</p>
+    <ul style="text-align: left; display: inline-block;">
+        <li>✅ Check real BTC balance</li>
+        <li>✅ Sell BTC for THB</li>
+        <li>✅ Withdraw to any Thai bank</li>
+        <li>✅ Generate PromptPay QR</li>
+    </ul>
+    <br>
+    <button onclick="window.location.href='https://github.com/Khan-Amit/ninurta_bank'">📂 View on GitHub</button>
+</div>
+</body>
+</html>
