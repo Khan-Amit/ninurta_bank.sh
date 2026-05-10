@@ -1,13 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ninurta Bank · IMEI Vault</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0e1a;
+            font-family: 'Courier New', monospace;
+            padding: 1rem;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background: #0f1322;
+            padding: 1rem 2rem;
+            border-radius: 2rem 2rem 0 0;
+            border-bottom: 2px solid #ffcc00;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .title { color: #ffcc00; font-size: 1.5rem; font-weight: bold; }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .panel {
+            background: #0f1322;
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            border: 1px solid #2a3a60;
+        }
+        .security-panel {
+            background: #0a0e1a;
+            border: 2px solid #ff3300;
+        }
+        .locked { color: #ff6666; }
+        .unlocked { color: #88ff88; }
+        button {
+            background: #1f2c46;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 2rem;
+            color: white;
+            cursor: pointer;
+            margin: 0.25rem;
+            font-family: monospace;
+        }
+        button.primary { background: #2a4a7a; }
+        button.warning { background: #5a3a2a; }
+        .terminal {
+            background: #010410;
+            border-radius: 1rem;
+            padding: 1rem;
+            font-size: 0.7rem;
+            color: #88ffaa;
+            height: 300px;
+            overflow-y: auto;
+        }
+        .log-line {
+            border-left: 2px solid #ffcc00;
+            padding-left: 8px;
+            margin: 4px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 1rem;
+            padding: 1rem;
+            font-size: 0.7rem;
+            color: #8da0c0;
+        }
+        .imei-status {
+            font-size: 0.7rem;
+            margin-top: 10px;
+            padding: 5px;
+            background: #010410;
+            border-radius: 1rem;
+        }
+        .balance-box {
+            margin-top: 15px;
+            padding: 10px;
+            background: #010410;
+            border-radius: 1rem;
+            text-align: center;
+        }
+        @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div class="title">🏦 NINURTA BANK ATM</div>
+        <div>IMEI-Locked Vault | No Swift</div>
+    </div>
+
+    <div class="grid">
+        <!-- LEFT PANEL -->
+        <div class="panel security-panel">
+            <h3>🔐 IMEI SECURITY VAULT</h3>
+            <div id="authStatus" class="locked">🔒 VAULT LOCKED</div>
+            <div id="imeiStatus" class="imei-status">📱 Detecting device...</div>
+            
+            <div style="margin: 1rem 0;">
                 <button id="loginBtn" class="primary">🔓 LOGIN WITH THIS DEVICE</button>
                 <button id="resetDeviceBtn" class="warning">🔄 RESET DEVICE (Admin)</button>
             </div>
             
-            <div id="balanceDisplay" style="display:none;">
-                <hr>
-                <h4>💰 YOUR BALANCE</h4>
-                <div>₿ <span id="btcBalance">0.00000000</span> BTC</div>
-                <div>฿ <span id="thbBalance">0.00</span> THB</div>
-                <div>📊 Rate: 1 BTC = ฿ <span id="btcRate">1,800,000</span></div>
+            <div id="balanceDisplay" class="balance-box" style="display:none;">
+                <strong>💰 YOUR BALANCE</strong><br>
+                ₿ <span id="btcBalance">0.00000000</span> BTC<br>
+                ฿ <span id="thbBalance">0.00</span> THB<br>
+                📊 Rate: 1 BTC = ฿ <span id="btcRate">1,800,000</span>
             </div>
         </div>
 
@@ -37,7 +147,7 @@
 
 <script>
     // ============================================================
-    // IMEI-BASED AUTHENTICATION (WORKING)
+    // IMEI-BASED AUTHENTICATION (FULLY WORKING)
     // ============================================================
     const BTC_ADDR = "bc1qk7ajtrgplvn25600wm7gx9u5c5nk8kz9dfpcqy";
     let unlocked = false;
@@ -82,12 +192,9 @@
         let deviceId = await getDeviceFingerprint();
         setDeviceId(deviceId);
         unlocked = true;
-        document.getElementById('imeiStatus').innerHTML = `📱 Device registered: ${deviceId.substring(0,12)}...`;
-        document.getElementById('authStatus').innerHTML = '🔓 VAULT UNLOCKED';
-        document.getElementById('authStatus').className = 'unlocked';
-        document.getElementById('balanceDisplay').style.display = 'block';
+        updateUIForUnlocked();
         addLog(`🔓 VAULT UNLOCKED — Device registered as master`);
-        fetchBalance();
+        await fetchBalance();
     }
 
     async function verifyAndUnlock() {
@@ -100,11 +207,9 @@
         document.getElementById('imeiStatus').innerHTML = `📱 Device ID: ${currentId.substring(0,12)}...`;
         if(storedId === currentId) {
             unlocked = true;
-            document.getElementById('authStatus').innerHTML = '🔓 VAULT UNLOCKED';
-            document.getElementById('authStatus').className = 'unlocked';
-            document.getElementById('balanceDisplay').style.display = 'block';
+            updateUIForUnlocked();
             addLog(`🔓 VAULT UNLOCKED — Device verified`);
-            fetchBalance();
+            await fetchBalance();
             return true;
         } else {
             addLog(`❌ DEVICE MISMATCH — Unauthorized device`);
@@ -112,7 +217,14 @@
         }
     }
 
+    function updateUIForUnlocked() {
+        document.getElementById('authStatus').innerHTML = '🔓 VAULT UNLOCKED';
+        document.getElementById('authStatus').className = 'unlocked';
+        document.getElementById('balanceDisplay').style.display = 'block';
+    }
+
     async function login() {
+        addLog(`🔐 Attempting login...`);
         let storedId = getStoredDeviceId();
         if(!storedId) {
             await registerAndUnlock();
