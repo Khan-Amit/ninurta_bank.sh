@@ -38,3 +38,17 @@ SOFTWARE.
 </div>
 </body>
 </html>
+
+
+---
+
+## UPLOAD TO GITHUB
+
+```bash
+cd ~/ninurta_bank
+nano index.html          # Paste FILE 1
+nano LICENSE.html        # Paste FILE 2
+nano README.md           # Paste FILE 3
+git add index.html LICENSE.html README.md
+git commit -m "Add complete front-end with security, license, and interactive ATM"
+git push origin main
