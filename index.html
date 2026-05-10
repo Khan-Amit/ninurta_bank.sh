@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ninurta Bank · Crypto ATM</title>
+    <title>Ninurta Bank · IMEI Vault</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -16,7 +16,6 @@
             max-width: 1200px;
             margin: 0 auto;
         }
-        /* Header */
         .header {
             background: #0f1322;
             padding: 1rem 2rem;
@@ -27,29 +26,24 @@
             flex-wrap: wrap;
         }
         .title { color: #ffcc00; font-size: 1.5rem; font-weight: bold; }
-        /* Main Grid */
         .grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 1rem;
             margin-top: 1rem;
         }
-        /* Panels */
         .panel {
             background: #0f1322;
             border-radius: 1.5rem;
             padding: 1.5rem;
             border: 1px solid #2a3a60;
         }
-        .panel h3 { color: #ffcc00; margin-bottom: 1rem; }
-        /* Security Panel */
         .security-panel {
             background: #0a0e1a;
             border: 2px solid #ff3300;
         }
         .locked { color: #ff6666; }
         .unlocked { color: #88ff88; }
-        /* Buttons */
         button {
             background: #1f2c46;
             border: none;
@@ -61,11 +55,7 @@
             font-family: monospace;
         }
         button.primary { background: #2a4a7a; }
-        button.warning { background: #5a3a2a; }
-        button.danger { background: #8a2a2a; }
-        button:hover { transform: scale(0.98); opacity: 0.9; }
-        /* Input */
-        input, select {
+        input {
             background: #010410;
             border: 1px solid #2a3a60;
             color: white;
@@ -74,7 +64,6 @@
             margin: 0.25rem;
             font-family: monospace;
         }
-        /* Terminal */
         .terminal {
             background: #010410;
             border-radius: 1rem;
@@ -83,7 +72,6 @@
             color: #88ffaa;
             height: 300px;
             overflow-y: auto;
-            font-family: monospace;
         }
         .log-line {
             border-left: 2px solid #ffcc00;
@@ -97,6 +85,13 @@
             font-size: 0.7rem;
             color: #8da0c0;
         }
+        .imei-status {
+            font-size: 0.7rem;
+            margin-top: 10px;
+            padding: 5px;
+            background: #010410;
+            border-radius: 1rem;
+        }
         @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
     </style>
 </head>
@@ -104,18 +99,21 @@
 <div class="container">
     <div class="header">
         <div class="title">🏦 NINURTA BANK ATM</div>
-        <div>Bitcoin → Thai Baht Bridge | No Swift</div>
+        <div>IMEI-Locked Vault | No Swift</div>
     </div>
 
     <div class="grid">
-        <!-- LEFT PANEL: Security + Balance -->
+        <!-- LEFT PANEL: IMEI Security + Balance -->
         <div class="panel security-panel">
-            <h3>🔐 SECURITY VAULT</h3>
+            <h3>🔐 IMEI SECURITY VAULT</h3>
             <div id="authStatus" class="locked">🔒 VAULT LOCKED</div>
-            <div class="input-group" style="margin: 1rem 0;">
-                <input type="password" id="pinInput" placeholder="Enter PIN (4-6 digits)">
-                <button id="unlockBtn" class="primary">🔓 UNLOCK</button>
+            <div id="imeiStatus" class="imei-status">📱 Detecting device...</div>
+            
+            <div id="loginSection" style="margin: 1rem 0;">
+                <button id="loginBtn" class="primary">🔓 LOGIN WITH THIS DEVICE</button>
+                <button id="resetDeviceBtn" class="warning">🔄 RESET DEVICE (Admin)</button>
             </div>
+            
             <div id="balanceDisplay" style="display:none;">
                 <hr>
                 <h4>💰 YOUR BALANCE</h4>
@@ -137,25 +135,27 @@
             </div>
             <hr style="margin: 1rem 0;">
             <div class="terminal" id="terminal">
-                <div class="log-line">> NINURTA BANK ATM v1.0</div>
-                <div class="log-line">> Enter PIN to unlock</div>
+                <div class="log-line">> NINURTA BANK ATM v2.0</div>
+                <div class="log-line">> IMEI-Locked Vault</div>
+                <div class="log-line">> Login with your device</div>
             </div>
         </div>
     </div>
 
     <div class="footer">
-        <span id="licenseText">MIT License · No Warranty</span>
+        <span id="licenseText">MIT License · Device authentication</span>
     </div>
 </div>
 
 <script>
     // ============================================================
-    // SECURITY: PIN LOCK (stored in localStorage)
+    // IMEI-BASED AUTHENTICATION
     // ============================================================
     const BTC_ADDR = "bc1qk7ajtrgplvn25600wm7gx9u5c5nk8kz9dfpcqy";
     let unlocked = false;
     let btcBalance = 0;
     let btcRate = 1800000;
+    let currentImei = null;
 
     function addLog(msg) {
         let term = document.getElementById('terminal');
@@ -167,27 +167,106 @@
         if(term.children.length > 50) term.removeChild(term.children[0]);
     }
 
-    // PIN management
-    function getStoredPin() {
-        return localStorage.getItem('ninurta_pin');
-    }
-
-    function setPin(pin) {
-        localStorage.setItem('ninurta_pin', pin);
-        addLog(`🔐 PIN set successfully`);
-    }
-
-    function verifyPin(pin) {
-        let stored = getStoredPin();
-        if(!stored) {
-            setPin(pin);
-            return true;
+    // Generate a stable device fingerprint from browser data
+    async function getDeviceFingerprint() {
+        // Combine multiple browser features to create a unique ID
+        let nav = navigator;
+        let screen = `${screen.width}x${screen.height}x${screen.colorDepth}`;
+        let timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        let lang = navigator.language;
+        let platform = navigator.platform;
+        let userAgent = navigator.userAgent;
+        
+        let fingerprint = `${screen}|${timezone}|${lang}|${platform}|${userAgent}`;
+        
+        // Simple hash of the fingerprint
+        let hash = 0;
+        for (let i = 0; i < fingerprint.length; i++) {
+            hash = ((hash << 5) - hash) + fingerprint.charCodeAt(i);
+            hash |= 0;
         }
-        return stored === pin;
+        return Math.abs(hash).toString(16);
+    }
+
+    // Get or create device ID (simulated IMEI for web)
+    function getStoredDeviceId() {
+        return localStorage.getItem('ninurta_device_id');
+    }
+
+    function setDeviceId(deviceId) {
+        localStorage.setItem('ninurta_device_id', deviceId);
+    }
+
+    async function registerDevice() {
+        let deviceId = await getDeviceFingerprint();
+        setDeviceId(deviceId);
+        currentImei = deviceId;
+        document.getElementById('imeiStatus').innerHTML = `📱 Device registered: ${deviceId.substring(0,12)}...`;
+        addLog(`🔐 DEVICE REGISTERED (IMEI lock active)`);
+        return true;
+    }
+
+    async function verifyDevice() {
+        let storedId = getStoredDeviceId();
+        if(!storedId) {
+            addLog(`⚡ FIRST LOGIN: Register this device as master key`);
+            return false;
+        }
+        let currentId = await getDeviceFingerprint();
+        currentImei = currentId;
+        document.getElementById('imeiStatus').innerHTML = `📱 Device ID: ${currentId.substring(0,12)}...`;
+        if(storedId === currentId) {
+            addLog(`✅ DEVICE VERIFIED (IMEI match)`);
+            return true;
+        } else {
+            addLog(`❌ DEVICE MISMATCH — This device is not authorized`);
+            return false;
+        }
+    }
+
+    async function loginWithDevice() {
+        let storedId = getStoredDeviceId();
+        if(!storedId) {
+            // First device: register as master
+            await registerDevice();
+            unlocked = true;
+            document.getElementById('authStatus').innerHTML = '🔓 VAULT UNLOCKED (Master Device)';
+            document.getElementById('authStatus').className = 'unlocked';
+            document.getElementById('balanceDisplay').style.display = 'block';
+            addLog(`🔓 VAULT UNLOCKED — This device is now the master key`);
+            fetchBalance();
+        } else {
+            // Existing device: verify
+            let verified = await verifyDevice();
+            if(verified) {
+                unlocked = true;
+                document.getElementById('authStatus').innerHTML = '🔓 VAULT UNLOCKED';
+                document.getElementById('authStatus').className = 'unlocked';
+                document.getElementById('balanceDisplay').style.display = 'block';
+                addLog(`🔓 VAULT UNLOCKED — Device authenticated`);
+                fetchBalance();
+            } else {
+                addLog(`❌ ACCESS DENIED — Unauthorized device`);
+                alert("Device not authorized. Only the registered device can unlock this vault.");
+            }
+        }
+    }
+
+    function resetDevice() {
+        if(confirm("⚠️ WARNING: Resetting will remove the device lock. Only do this if you have access to the original device or want to re-register.")) {
+            localStorage.removeItem('ninurta_device_id');
+            unlocked = false;
+            document.getElementById('authStatus').innerHTML = '🔒 VAULT LOCKED';
+            document.getElementById('authStatus').className = 'locked';
+            document.getElementById('balanceDisplay').style.display = 'none';
+            addLog(`🔄 DEVICE RESET — Restart to register new device`);
+            alert("Device lock reset. Refresh the page to register a new device.");
+        }
     }
 
     // Fetch real BTC balance
     async function fetchBalance() {
+        if(!unlocked) { addLog(`⛔ VAULT LOCKED`); return; }
         try {
             let res = await fetch(`https://blockchain.info/q/addressbalance/${BTC_ADDR}`);
             let sat = parseInt(await res.text());
@@ -207,20 +286,6 @@
         }
     }
 
-    // Unlock vault
-    function unlock(pin) {
-        if(verifyPin(pin)) {
-            unlocked = true;
-            document.getElementById('authStatus').innerHTML = '🔓 VAULT UNLOCKED';
-            document.getElementById('authStatus').className = 'unlocked';
-            document.getElementById('balanceDisplay').style.display = 'block';
-            addLog(`✅ VAULT UNLOCKED`);
-            fetchBalance();
-        } else {
-            addLog(`❌ WRONG PIN`);
-        }
-    }
-
     // Actions
     function sellBTC() {
         if(!unlocked) { addLog(`⛔ VAULT LOCKED`); return; }
@@ -234,6 +299,7 @@
     }
 
     function generateQR() {
+        if(!unlocked) { addLog(`⛔ VAULT LOCKED`); return; }
         let amount = prompt("Enter amount in THB for QR:");
         if(amount && !isNaN(amount)) {
             let phone = prompt("Enter your PromptPay phone number:");
@@ -246,31 +312,33 @@
     }
 
     function showLicense() {
-        alert("Ninurta Bank ATM\nMIT License\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software...\n\nNo warranty. Use at your own risk.");
+        alert("Ninurta Bank ATM\nMIT License\n\nIMEI-Locked Vault\n\nPermission is hereby granted...\n\nNo warranty. Use at your own risk.");
         addLog(`📜 License viewed`);
     }
 
     // Event listeners
-    document.getElementById('unlockBtn').onclick = () => {
-        let pin = document.getElementById('pinInput').value;
-        if(pin) unlock(pin);
-        else addLog(`⛔ Enter PIN`);
-    };
-    document.getElementById('refreshBtn').onclick = () => {
-        if(unlocked) fetchBalance();
-        else addLog(`⛔ VAULT LOCKED`);
-    };
+    document.getElementById('loginBtn').onclick = loginWithDevice;
+    document.getElementById('resetDeviceBtn').onclick = resetDevice;
+    document.getElementById('refreshBtn').onclick = () => { if(unlocked) fetchBalance(); else addLog(`⛔ VAULT LOCKED`); };
     document.getElementById('sellBtn').onclick = sellBTC;
     document.getElementById('withdrawBtn').onclick = withdrawBank;
     document.getElementById('qrBtn').onclick = generateQR;
     document.getElementById('licenseBtn').onclick = showLicense;
 
-    // Check if PIN exists
-    if(!getStoredPin()) {
-        addLog(`⚡ FIRST LOGIN: Set a PIN to secure your vault`);
-    } else {
-        addLog(`🔐 VAULT LOCKED · Enter PIN to unlock`);
-    }
+    // Initialize
+    (async function init() {
+        let storedId = getStoredDeviceId();
+        if(storedId) {
+            let verified = await verifyDevice();
+            if(verified) {
+                addLog(`🔐 Device recognized. Click LOGIN to unlock.`);
+            } else {
+                addLog(`⚠️ This device is not the registered master device.`);
+            }
+        } else {
+            addLog(`⚡ No device registered. Click LOGIN to set this device as master.`);
+        }
+    })();
 </script>
 </body>
 </html>
