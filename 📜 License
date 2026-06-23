@@ -1,0 +1,275 @@
+📜 License
+
+Intellectual Property Notice
+
+Copyright © 2024 Seliim Ahmed
+
+All rights reserved. This software and its source code are the intellectual property of Seliim Ahmed. Unauthorized copying, modification, distribution, or use of this software without express written permission from the copyright holder is strictly prohibited.
+
+Terms of Use
+
+Term Description
+Personal Use ✔️ Allowed for personal, non-commercial use
+Commercial Use ❌ Requires written permission
+Modification ❌ Requires written permission
+Redistribution ❌ Prohibited without permission
+Sublicensing ❌ Prohibited
+
+Permissions
+
+Permission is granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software only for personal, non-commercial purposes, subject to the following conditions:
+
+1. The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+2. Redistribution, modification, or commercial use requires express written permission from the copyright holder.
+3. Any derivative works must be clearly marked as such and must not claim to be the original Software.
+
+Disclaimer
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Legal Contact
+
+For permissions, commercial licensing, or legal inquiries:
+
+```
+Seliim Ahmed
+Email: amit.khanna.1082@gmail.com
+```
+
+Any unauthorized use will be prosecuted to the fullest extent of applicable law.
+
+---
+
+🛡️ Legal Disclaimer
+
+IMPORTANT: This software is a simulation/game for educational and entertainment purposes only. It does NOT:
+
+· Execute real financial transactions
+· Store or transmit real cryptocurrency
+· Access real bank accounts
+· Provide financial advice
+
+Users are solely responsible for their own financial decisions. The author assumes no liability for any use or misuse of this software.
+
+---
+
+📚 Acknowledgments
+
+· Bitcoin for the blockchain technology
+· CoinGecko for the exchange rate API
+· PromptPay for the Thai QR payment system
+· The Marduk Project for inspiration
+
+---
+
+📧 Contact
+
+ 
+Developer Seliim Ahmed
+Email amit.khanna.1082@gmail.com
+Project Ninurta Bank ATM
+Part of Marduk System™
+
+---
+
+🎯 Roadmap
+
+Planned Features
+
+· Multi-cryptocurrency support (ETH, XMR, LTC)
+· Real transaction signing
+· Web interface with live updates
+· Telegram bot integration
+· Hardware wallet support (Ledger, Trezor)
+· Export transaction history (CSV, PDF)
+
+---
+
+⭐ Star Us!
+
+If you find this project useful or entertaining, please consider giving it a ⭐ on GitHub!
+
+---
+
+❤️ Support
+
+For questions, support, or feature requests:
+
+1. Open an issue on GitHub
+2. Email: amit.khanna.1082@gmail.com
+3. Visit: GitHub Repository
+
+---
+
+Made with ❤️ by Seliim Ahmed
+Part of the Marduk System™
+
+---
+
+```bash
+# Run the ATM
+./ninurta_bank.sh
+
+# 🏦 NINURTA BANK ATM v3.0
+# 🔐 Enter PIN: 197328
+# Welcome to Ninurta Bank!
+```
+
+---
+
+📋 License Quick Reference
+
+Question Answer
+Can I use this for fun? ✅ Yes!
+Can I modify it? ✅ For personal use only
+Can I share it? ❌ Not without permission
+Can I sell it? ❌ Not without permission
+Can I use it commercially? ❌ Not without permission
+Can I fork it? ✅ For personal use only
+
+---
+
+© 2024 Seliim Ahmed. All rights reserved. Protected by international copyright law.
+
+---
+
+"No Swift. No Middlemen. Just Value."
+
+```
+
+---
+
+## 📄 Complete File: `LICENSE`
+
+```text
+# ============================================================
+#                      NINURTA BANK ATM
+#                    PROPRIETARY LICENSE
+# ============================================================
+#
+# Copyright © 2024 Seliim Ahmed
+# All rights reserved.
+#
+# ============================================================
+#  📜 LICENSE TERMS
+# ============================================================
+
+1. GRANT OF LICENSE
+
+   Permission is granted, free of charge, to any person obtaining
+   a copy of this software (the "Software") to use the Software
+   for PERSONAL, NON-COMMERCIAL purposes only.
+
+2. RESTRICTIONS
+
+   a) Commercial Use: The Software may not be used for commercial
+      purposes without express written permission from the
+      copyright holder.
+
+   b) Modification: The Software may not be modified, adapted,
+      or altered without express written permission.
+
+   c) Distribution: The Software may not be redistributed,
+      sublicensed, or sold without express written permission.
+
+   d) Attribution: Any use must retain the original copyright
+      notice and this permission notice.
+
+3. INTELLECTUAL PROPERTY
+
+   The Software is the exclusive intellectual property of
+   Seliim Ahmed. All rights not expressly granted herein are
+   reserved.
+
+4. DISCLAIMER
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
+   KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+   WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+   PURPOSE AND NONINFRINGEMENT.
+
+5. LIABILITY
+
+   IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+   FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+   ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+   OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+
+6. TERMINATION
+
+   Any unauthorized use will automatically terminate this license
+   and may result in legal action.
+
+7. GOVERNING LAW
+
+   This license shall be governed by and construed in accordance
+   with applicable laws.
+
+# ============================================================
+# 📧 CONTACT FOR PERMISSIONS
+# ============================================================
+#
+# Seliim Ahmed
+# Email: amit.khanna.1082@gmail.com
+#
+# For commercial licensing, permissions, or inquiries:
+# Please contact the copyright holder directly.
+#
+# ============================================================
+#  ⚠️ LEGAL NOTICE
+# ============================================================
+#
+# Any unauthorized use, reproduction, or distribution of this
+# software will be prosecuted to the fullest extent of the law.
+#
+# ============================================================
+```
+
+---
+
+✅ Summary of Changes
+
+Section Change
+Title Added "Ninurta Bank ATM" header
+Overview Clear description with disclaimer
+Features Organized table format
+License Bulletproof proprietary license
+Legal Notice Clear unauthorized use warning
+Contact Info Developer details prominently displayed
+Disclaimer Financial and legal disclaimers
+Language Professional, proper legal terms
+
+---
+
+🚀 How to Use
+
+```bash
+# Create README
+nano README.md
+# Paste the content above
+
+# Create LICENSE
+nano LICENSE
+# Paste the license content above
+
+# Add to Git
+git add README.md LICENSE
+git commit -m "Add professional README and license"
+git push
+```
+
+---
+
+⚖️ License Comparison
+
+Feature MIT License (original) Proprietary License (new)
+Commercial Use ✅ Allowed ❌ Restricted
+Modification ✅ Allowed ❌ Restricted
+Distribution ✅ Allowed ❌ Restricted
+Protection ❌ Weak ✅ Strong
+Legal Enforcement ❌ Difficult ✅ Easy
+
+---
+
+Done! Your project now has professional documentation and bulletproof licensing. Let me know if you need any changes! 🔒📚
