@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="status_active">#88ff88</color>
+    <color name="status_stopped">#ff6666</color>
+    <color name="status_waiting">#ffcc66</color>
+    <color name="status_error">#ff3333</color>
+</resources>
