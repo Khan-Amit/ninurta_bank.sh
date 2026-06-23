@@ -239,6 +239,16 @@
         }
         .real-earnings .label { color: #33ccff; font-size: 0.7rem; }
         .real-earnings .value { color: #88ff88; font-size: 1.1rem; }
+        .wallet-display {
+            background: #010410;
+            border-radius: 0.5rem;
+            padding: 0.3rem 0.8rem;
+            font-size: 0.5rem;
+            color: #8da0c0;
+            word-break: break-all;
+            margin-top: 0.5rem;
+            border: 1px solid #1a2a4a;
+        }
         @media (max-width: 700px) {
             .grid { grid-template-columns: 1fr; }
             .password-box { padding: 2rem; }
@@ -346,8 +356,8 @@
                 </div>
             </div>
             
-            <div style="margin-top: 0.5rem; font-size:0.7rem; color:#8da0c0; text-align:center;">
-                📬 <span id="walletDisplay">bc1qk7aj...dfpcqy</span>
+            <div class="wallet-display">
+                📬 XMR: 44osUR6e9UjePWUQhavLNYTY7JSzwZMN6249AdnjbwmtXtirsjDiGcejCjJkoTst2BGD3NaLrtpzNENsc6AsZ9AGKWTx7YZ
             </div>
         </div>
 
@@ -367,6 +377,7 @@
                 <div class="log-line success">> NINURTA BANK ATM v3.0</div>
                 <div class="log-line success">> 🔓 VAULT UNLOCKED</div>
                 <div class="log-line real">> 🔗 REAL MINING INTEGRATION ACTIVE</div>
+                <div class="log-line real">> 📬 Wallet: 44osUR6e9Uje...WKTx7YZ</div>
                 <div class="log-line">> Ready for transactions...</div>
             </div>
         </div>
@@ -382,16 +393,18 @@
      ============================================================ -->
 <script>
     // ============================================================
-    // 🔐 CONFIGURATION - REPLACE WITH YOUR WALLETS!
+    // 🔐 CONFIGURATION - YOUR WALLETS!
     // ============================================================
     
     const VAULT_PASSWORD = "197328";
     const BTC_ADDR = "bc1qk7ajtrgplvn25600wm7gx9u5c5nk8kz9dfpcqy";
     
-    // ⚠️ REPLACE THESE WITH YOUR REAL WALLET ADDRESSES!
-    const XMR_WALLET = "YOUR_XMR_WALLET_ADDRESS";  // ⚠️ Replace!
-    const DOGE_WALLET = "YOUR_DOGE_WALLET_ADDRESS"; // ⚠️ Replace!
-    const LTC_WALLET = "YOUR_LTC_WALLET_ADDRESS";  // ⚠️ Replace!
+    // ✅ YOUR MONERO WALLET ADDRESS (UPDATED!)
+    const XMR_WALLET = "44osUR6e9UjePWUQhavLNYTY7JSzwZMN6249AdnjbwmtXtirsjDiGcejCjJkoTst2BGD3NaLrtpzNENsc6AsZ9AGKWTx7YZ";
+    
+    // ⚠️ REPLACE THESE WITH YOUR OTHER WALLETS
+    const DOGE_WALLET = "YOUR_DOGE_WALLET_ADDRESS"; // ⚠️ Replace if you have one!
+    const LTC_WALLET = "YOUR_LTC_WALLET_ADDRESS";  // ⚠️ Replace if you have one!
     
     const MAX_LOG_ENTRIES = 50;
     
@@ -478,6 +491,7 @@
                 <span class="unlocked">🔓 VAULT UNLOCKED</span>
             `;
             addLog('🔓 VAULT UNLOCKED — Welcome', 'success');
+            addLog(`📬 Wallet: ${XMR_WALLET.substring(0, 20)}...${XMR_WALLET.slice(-10)}`, 'real');
             fetchBalance();
             fetchRealEarnings();
             return true;
@@ -546,7 +560,6 @@
             btcRateEl.innerText = Math.round(btcRate).toLocaleString();
             const thb = btcBalance * btcRate;
             thbBalanceEl.innerText = thb.toFixed(2);
-            walletDisplay.innerText = BTC_ADDR.substring(0, 15) + '...' + BTC_ADDR.slice(-10);
             
             addLog(`💰 Balance: ${btcBalance.toFixed(8)} BTC (฿${thb.toFixed(2)})`, 'success');
         } catch (e) {
@@ -576,15 +589,15 @@
                         realXMR = xmrData.balance / 1000000000000;
                         xmrEarningsEl.textContent = realXMR.toFixed(8);
                         addLog(`💰 Real XMR: ${realXMR.toFixed(8)} XMR`, 'success');
+                    } else {
+                        addLog('⏳ No XMR balance yet. Start mining!', 'warning');
                     }
                 } catch (e) {
                     addLog('⚠️ Could not fetch XMR balance', 'warning');
                 }
-            } else {
-                addLog('⚠️ XMR wallet not configured', 'warning');
             }
             
-            // Fetch DOGE balance from chain.so
+            // Fetch DOGE balance
             if (DOGE_WALLET && DOGE_WALLET !== 'YOUR_DOGE_WALLET_ADDRESS') {
                 try {
                     const dogeRes = await fetch(`https://chain.so/api/v2/get_address_balance/DOGE/${DOGE_WALLET}`);
@@ -597,8 +610,6 @@
                 } catch (e) {
                     addLog('⚠️ Could not fetch DOGE balance', 'warning');
                 }
-            } else {
-                addLog('⚠️ DOGE wallet not configured', 'warning');
             }
             
             // Update timestamp
@@ -606,9 +617,12 @@
             earningsTimeEl.textContent = now.toLocaleString();
             
             // Calculate total value in THB
-            const totalValue = (realXMR * 150 * btcRate / 57000) + (realDOGE * 0.12 * btcRate / 57000);
+            const totalValue = (realXMR * 150) + (realDOGE * 0.12);
             if (totalValue > 0) {
                 addLog(`💰 Total mining value: ฿${totalValue.toFixed(2)} THB`, 'success');
+                addLog(`📊 1 XMR ≈ ฿${(150 * btcRate / 57000).toFixed(2)} THB`, 'info');
+            } else {
+                addLog('💡 Start mining to see earnings here!', 'info');
             }
             
         } catch (e) {
@@ -652,8 +666,9 @@
         
         miningActive = true;
         addLog(`⛏️ STARTING MINING: ${config.name} (${config.algorithm})`, 'success');
-        addLog(`📤 Wallet: ${crypto === 'xmr' ? XMR_WALLET : DOGE_WALLET}`, 'info');
+        addLog(`📤 Wallet: ${XMR_WALLET.substring(0, 20)}...${XMR_WALLET.slice(-10)}`, 'info');
         addLog(`💻 Threads: ${navigator.hardwareConcurrency || 4}`, 'info');
+        addLog(`🔗 Pool: pool.supportxmr.com:3333`, 'info');
         
         earnings = 0;
         updateMiningUI();
@@ -667,7 +682,7 @@
             }
         }, 5000);
         
-        addLog(`✅ Mining started successfully!`, 'success');
+        addLog(`✅ Mining started! Check your wallet at xmrchain.net`, 'success');
     }
     
     let miningInterval = null;
@@ -705,10 +720,12 @@
         
         if (miningActive) {
             addLog(`💰 Current earnings: ${earnings.toFixed(8)} ${config.symbol}`, 'success');
-            addLog(`📊 Estimated value: ฿${(earnings * btcRate * 0.001).toFixed(2)} THB`, 'info');
+            const thbValue = earnings * 150;
+            addLog(`📊 Estimated value: ฿${thbValue.toFixed(2)} THB`, 'info');
         } else {
             addLog(`⏹️ Mining stopped. Last earnings: ${earnings.toFixed(8)} ${config.symbol}`, 'info');
         }
+        fetchRealEarnings();
     }
     
     function showMiningStats() {
@@ -726,11 +743,12 @@
         addLog(`   Status: ${miningActive ? '🟢 Active' : '🔴 Stopped'}`, 'info');
         addLog(`   Earnings: ${earnings.toFixed(8)} ${config.symbol}`, 'info');
         addLog(`   Threads: ${navigator.hardwareConcurrency || 4}`, 'info');
-        addLog(`   Wallet: ${crypto === 'xmr' ? XMR_WALLET : DOGE_WALLET}`, 'info');
+        addLog(`   Wallet: ${XMR_WALLET.substring(0, 20)}...${XMR_WALLET.slice(-10)}`, 'info');
+        addLog(`   Pool: pool.supportxmr.com:3333`, 'info');
         
-        if (earnings > 0) {
-            const thbValue = earnings * btcRate * 0.001;
-            addLog(`   Estimated THB: ฿${thbValue.toFixed(2)}`, 'success');
+        if (realXMR > 0) {
+            addLog(`   Real XMR: ${realXMR.toFixed(8)} XMR`, 'success');
+            addLog(`   Real Value: ฿${(realXMR * 150).toFixed(2)} THB`, 'success');
         }
     }
     
@@ -824,6 +842,7 @@
             '🔐 Secured with password lock\n' +
             '📊 Real BTC price from CoinGecko\n' +
             '⛏️ Real mining integration\n' +
+            '📬 XMR: 44osUR6e9Uje...WKTx7YZ\n' +
             '🔗 Real earnings from blockchain\n' +
             '⚡ Made with ❤️'
         );
@@ -908,15 +927,14 @@
     // 
     // Password: 197328
     // 
-    // ⚠️ REPLACE THESE WALLET ADDRESSES:
-    //   - XMR_WALLET: Your Monero wallet address
-    //   - DOGE_WALLET: Your Dogecoin wallet address
-    //   - LTC_WALLET: Your Litecoin wallet address
+    // ✅ YOUR XMR WALLET: 
+    //    44osUR6e9UjePWUQhavLNYTY7JSzwZMN6249AdnjbwmtXtirsjDiGcejCjJkoTst2BGD3NaLrtpzNENsc6AsZ9AGKWTx7YZ
     // 
-    // Get wallets from:
-    //   XMR: https://www.getmonero.org/downloads/
-    //   DOGE: https://dogecoin.com/
-    //   LTC: https://litecoin.org/
+    // Check your balance at:
+    //    https://xmrchain.net/address/YOUR_WALLET
+    // 
+    // To start mining:
+    //    ./setup_mining.sh
     // 
     // ============================================================
 </script>
