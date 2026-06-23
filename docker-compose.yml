@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  ninurta-atm:
+    image: nginx:alpine
+    container_name: ninurta_atm
+    ports:
+      - "8080:80"
+    volumes:
+      - ./index.html:/usr/share/nginx/html/index.html
+    restart: unless-stopped
+
+  mining-rig:
+    image: xmrig/xmrig
+    container_name: mining_rig
+    environment:
+      - XMRIG_POOL=pool.supportxmr.com:3333
+      - XMRIG_WALLET=YOUR_XMR_WALLET_ADDRESS
+      - XMRIG_PASS=ninurta_rig
+      - XMRIG_THREADS=4
+    restart: unless-stopped
