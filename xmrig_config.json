@@ -1,0 +1,49 @@
+{
+    "autosave": true,
+    "cpu": {
+        "enabled": true,
+        "huge-pages": true,
+        "huge-pages-jit": false,
+        "hw-aes": null,
+        "priority": null,
+        "memory-pool": true,
+        "yield": true,
+        "max-threads-hint": 50,
+        "asm": true,
+        "argon2-impl": null,
+        "cn/0": false,
+        "cn-lite/0": false
+    },
+    "pools": [
+        {
+            "url": "pool.supportxmr.com:3333",
+            "user": "YOUR_XMR_WALLET_ADDRESS",
+            "pass": "ninurta_rig",
+            "tls": false,
+            "keepalive": true,
+            "nicehash": false
+        }
+    ],
+    "api": {
+        "id": null,
+        "worker-id": null
+    },
+    "http": {
+        "enabled": false,
+        "host": "127.0.0.1",
+        "port": 8080,
+        "access-token": null,
+        "restricted": true
+    },
+    "donate-level": 1,
+    "randomx": {
+        "init": -1,
+        "mode": "auto",
+        "1gb-pages": false,
+        "rdmsr": true,
+        "wrmsr": true,
+        "cache_qos": false,
+        "numa": true,
+        "scratchpad_prefetch_mode": 1
+    }
+}
