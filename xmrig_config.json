@@ -17,7 +17,7 @@
     "pools": [
         {
             "url": "pool.supportxmr.com:3333",
-            "user": "YOUR_XMR_WALLET_ADDRESS",
+            "user": "44osUR6e9UjePWUQhavLNYTY7JSzwZMN6249AdnjbwmtXtirsjDiGcejCjJkoTst2BGD3NaLrtpzNENsc6AsZ9AGKWTx7YZ",
             "pass": "ninurta_rig",
             "tls": false,
             "keepalive": true,
