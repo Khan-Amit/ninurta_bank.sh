@@ -1,39 +1,39 @@
 #!/bin/bash
 # ============================================================
-# IGIGI TRANSPORTER v2.0 - Delivers resonance to pools
+# IGIGI TRANSPORTER v2.1 - Delivers resonance to pools
 # "Transporting quantum resonance to the blockchain."
 # ============================================================
-# 
-# 🔧 WHAT TO CHANGE:
-# 
-# 1. BTC_ADDR (line 38) - Change to your Bitcoin address
-# 2. POOL (line 39) - Change to your mining pool
-# 3. LOG_DIR (line 40) - Change log location
-# 4. SACRED array (line 42-43) - Customize sacred numbers
-# 5. DELIVERY_INTERVAL (line 45) - How often to check for new bridges
-# 6. MAX_RETRIES (line 46) - Max delivery attempts before alert
-# 
-# ============================================================
 
 # ============================================================
-# 🛠️ USER SETTINGS - Change these as needed
+# 🔧 CONFIGURATION - Can be overridden by ~/.marduk/transporter.conf
 # ============================================================
 
-BTC_ADDR="bc1qk7ajtrgplvn25600wm7gx9u5c5nk8kz9dfpcqy"  # Your Bitcoin address
-POOL="stratum+tcp://public-pool.io:21496"             # Mining pool
-LOG_DIR="$HOME/.marduk"                               # Log directory
+# Default settings (can be overridden)
+: "${BTC_ADDR:=bc1qk7ajtrgplvn25600wm7gx9u5c5nk8kz9dfpcqy}"
+: "${POOL:=stratum+tcp://public-pool.io:21496}"
+: "${LOG_DIR:=$HOME/.marduk}"
+: "${DELIVERY_INTERVAL:=1}"
+: "${MAX_RETRIES:=3}"
+: "${BATCH_SIZE:=1}"
+: "${DELIVERY_TIMEOUT:=30}"
+: "${RATE_LIMIT:=10}"  # Max deliveries per minute
+: "${MAX_HISTORY:=1000}"  # Keep only this many processed hashes
 
 # Sacred numbers
 SACRED=(7 13 22 34 41 50)
 
-# Delivery settings
-DELIVERY_INTERVAL=1                                   # Check every N seconds
-MAX_RETRIES=3                                         # Max retries per delivery
-BATCH_SIZE=1                                          # Number of hashes to deliver at once
-DELIVERY_TIMEOUT=30                                   # Timeout in seconds
+# ============================================================
+# 📂 LOAD CONFIG FILE (if exists)
+# ============================================================
+
+CONFIG_FILE="$HOME/.marduk/transporter.conf"
+if [ -f "$CONFIG_FILE" ]; then
+    source "$CONFIG_FILE"
+    echo "📋 Loaded config from $CONFIG_FILE"
+fi
 
 # ============================================================
-# 🧠 SYSTEM SETUP - Don't change unless you know what you're doing
+# 🧠 SYSTEM SETUP
 # ============================================================
 
 mkdir -p "$LOG_DIR"
@@ -45,7 +45,7 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 PURPLE='\033[0;35m'
 CYAN='\033[0;36m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
 # Log files
 DELIVERY_LOG="$LOG_DIR/delivery.log"
@@ -54,13 +54,25 @@ LATEST_TRANSPORT="$LOG_DIR/latest_transport.txt"
 FAILED_LOG="$LOG_DIR/failed_deliveries.log"
 STATS_LOG="$LOG_DIR/transporter_stats.log"
 BRIDGE_LOG="$LOG_DIR/bridge_hashes.log"
+PROCESSED_HASHES="$LOG_DIR/processed_hashes.txt"
 
 # Counters
 DELIVERED=0
 FAILED=0
-LAST_HASH=""
 START_TIME=$(date +%s)
 BATCH_BUFFER=()
+
+# Track processed hashes (prevents duplicates)
+declare -A PROCESSED_CACHE
+if [ -f "$PROCESSED_HASHES" ]; then
+    while IFS= read -r line; do
+        PROCESSED_CACHE["$line"]=1
+    done < "$PROCESSED_HASHES"
+fi
+
+# Rate limiting
+RATE_COUNTER=0
+RATE_TIMESTAMP=$(date +%s)
 
 # ============================================================
 # 📡 FUNCTIONS
@@ -74,13 +86,15 @@ transport_id() {
     echo "TX_${seed}_${sacred_num}_${RANDOM}"
 }
 
-# Log message with timestamp
+# Log message
 log_message() {
     local msg="$1"
     local level="${2:-INFO}"
     local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
     echo "[$timestamp] [$level] $msg" >> "$TRANSPORT_LOG"
-    echo -e "$msg"
+    if [ "$level" != "DEBUG" ]; then
+        echo -e "$msg"
+    fi
 }
 
 # Log error
@@ -111,22 +125,49 @@ validate_address() {
     fi
 }
 
-# Check if pool is reachable
+# Check if pool is reachable with retry
 check_pool() {
     local pool_host=$(echo "$POOL" | cut -d'/' -f3 | cut -d':' -f1)
-    local pool_port=$(echo "$POOL" | cut -d':' -f3 | cut -d'/' -f1)
+    local max_attempts=3
+    local attempt=1
     
-    if ping -c 1 -W 2 "$pool_host" &> /dev/null; then
-        return 0
-    else
-        return 1
-    fi
+    while [ $attempt -le $max_attempts ]; do
+        if ping -c 1 -W 2 "$pool_host" &> /dev/null; then
+            return 0
+        fi
+        attempt=$((attempt + 1))
+        sleep 1
+    done
+    return 1
 }
 
-# Simulate delivery to pool (replace with actual pool submission)
+# Check rate limit
+check_rate_limit() {
+    local current_time=$(date +%s)
+    local time_diff=$((current_time - RATE_TIMESTAMP))
+    
+    if [ $time_diff -ge 60 ]; then
+        # Reset counter every minute
+        RATE_COUNTER=0
+        RATE_TIMESTAMP=$current_time
+    fi
+    
+    if [ $RATE_COUNTER -ge $RATE_LIMIT ]; then
+        log_message "${YELLOW}⏳ Rate limit reached ($RATE_LIMIT/min). Waiting...${NC}" "WARN"
+        sleep 5
+        return 1
+    fi
+    
+    RATE_COUNTER=$((RATE_COUNTER + 1))
+    return 0
+}
+
+# Deliver to pool with exponential backoff
 deliver_to_pool() {
     local hash="$1"
     local address="$2"
+    local attempt=1
+    local backoff=1
     
     # Check pool connectivity first
     if ! check_pool; then
@@ -134,48 +175,76 @@ deliver_to_pool() {
         return 1
     fi
     
-    # Log delivery attempt
-    log_message "${YELLOW}📤 Attempting delivery to $POOL${NC}" "INFO"
+    # Check rate limit
+    if ! check_rate_limit; then
+        return 1
+    fi
     
-    # This is where you'd actually submit to the pool
-    # For real mining, use something like:
-    # echo "{\"method\": \"submit\", \"params\": [\"$address\", \"$hash\"]}" | nc $pool_host $pool_port
-    
-    # For now, simulate successful delivery
-    sleep 0.5
-    
-    # Check if the hash is valid
+    # Validate hash
     if ! validate_hash "$hash"; then
         log_error "Invalid hash format: $hash"
         return 1
     fi
     
-    # Simulate 95% success rate
-    if [ $((RANDOM % 100)) -lt 95 ]; then
-        return 0
-    else
-        return 1
+    # Attempt delivery with exponential backoff
+    while [ $attempt -le $MAX_RETRIES ]; do
+        log_message "${YELLOW}📤 Attempt $attempt/$MAX_RETRIES to $POOL${NC}" "INFO"
+        
+        # This is where you'd actually submit to the pool
+        # For real mining, replace with actual pool submission
+        
+        # Simulate delivery with 95% success rate
+        if [ $((RANDOM % 100)) -lt 95 ]; then
+            return 0
+        fi
+        
+        # Exponential backoff
+        if [ $attempt -lt $MAX_RETRIES ]; then
+            local wait_time=$((backoff * attempt * 2))
+            log_message "${YELLOW}⏳ Retrying in ${wait_time}s...${NC}" "WARN"
+            sleep $wait_time
+        fi
+        
+        attempt=$((attempt + 1))
+    done
+    
+    return 1
+}
+
+# Mark hash as processed
+mark_processed() {
+    local hash="$1"
+    PROCESSED_CACHE["$hash"]=1
+    echo "$hash" >> "$PROCESSED_HASHES"
+    
+    # Keep only last MAX_HISTORY entries
+    if [ -f "$PROCESSED_HASHES" ] && [ $(wc -l < "$PROCESSED_HASHES") -gt $MAX_HISTORY ]; then
+        tail -$MAX_HISTORY "$PROCESSED_HASHES" > "$PROCESSED_HASHES.tmp"
+        mv "$PROCESSED_HASHES.tmp" "$PROCESSED_HASHES"
     fi
+}
+
+# Check if hash was already processed
+is_processed() {
+    local hash="$1"
+    if [ -n "${PROCESSED_CACHE[$hash]}" ]; then
+        return 0
+    fi
+    return 1
 }
 
 # Process a single hash delivery
 process_hash() {
     local hash="$1"
-    local retry_count=0
-    local success=false
     
-    while [ $retry_count -lt $MAX_RETRIES ]; do
-        if deliver_to_pool "$hash" "$BTC_ADDR"; then
-            success=true
-            break
-        else
-            retry_count=$((retry_count + 1))
-            log_message "${YELLOW}⚠️  Retry $retry_count/$MAX_RETRIES for hash $hash${NC}" "WARN"
-            sleep 1
-        fi
-    done
+    # Check for duplicates
+    if is_processed "$hash"; then
+        log_message "${YELLOW}⚠️ Hash already processed, skipping${NC}" "WARN"
+        return 0
+    fi
     
-    if [ "$success" = true ]; then
+    if deliver_to_pool "$hash" "$BTC_ADDR"; then
+        mark_processed "$hash"
         return 0
     else
         return 1
@@ -192,26 +261,82 @@ save_stats() {
     echo "$timestamp,$delivered,$failed,$rate" >> "$STATS_LOG"
 }
 
+# Health check mode
+health_check() {
+    echo "🔍 IGIGI TRANSPORTER - Health Check"
+    echo "===================================="
+    
+    # Check Bitcoin address
+    if validate_address "$BTC_ADDR"; then
+        echo "✅ Bitcoin address: $BTC_ADDR"
+    else
+        echo "❌ Invalid Bitcoin address: $BTC_ADDR"
+    fi
+    
+    # Check pool
+    if check_pool; then
+        echo "✅ Pool reachable: $POOL"
+    else
+        echo "❌ Pool unreachable: $POOL"
+    fi
+    
+    # Check log directory
+    if [ -d "$LOG_DIR" ]; then
+        echo "✅ Log directory: $LOG_DIR"
+    else
+        echo "❌ Log directory missing: $LOG_DIR"
+    fi
+    
+    # Check processed hashes
+    if [ -f "$PROCESSED_HASHES" ]; then
+        echo "✅ Processed hashes: $(wc -l < "$PROCESSED_HASHES")"
+    fi
+    
+    # Check delivery stats
+    if [ -f "$DELIVERY_LOG" ]; then
+        local total=$(wc -l < "$DELIVERY_LOG")
+        local success=$(grep -c "SUCCESS" "$DELIVERY_LOG" 2>/dev/null || echo 0)
+        echo "✅ Total deliveries: $total"
+        echo "✅ Successful: $success"
+    fi
+    
+    exit 0
+}
+
 # ============================================================
 # 🚀 MAIN SCRIPT
 # ============================================================
 
+# Parse command line arguments
+case "$1" in
+    --health-check|-h)
+        health_check
+        ;;
+    --version|-v)
+        echo "IGIGI TRANSPORTER v2.1"
+        echo "Sacred numbers: ${SACRED[@]}"
+        exit 0
+        ;;
+esac
+
 clear
 echo -e "${BLUE}════════════════════════════════════════════════════════════${NC}"
-echo -e "${PURPLE}           🚚 IGIGI TRANSPORTER v2.0${NC}"
+echo -e "${PURPLE}           🚚 IGIGI TRANSPORTER v2.1${NC}"
 echo -e "${BLUE}════════════════════════════════════════════════════════════${NC}"
 echo -e "${YELLOW}📤 Destination:${NC} $POOL"
 echo -e "${YELLOW}📬 Wallet:${NC} $BTC_ADDR"
 echo -e "${YELLOW}🔢 Sacred numbers:${NC} ${SACRED[@]}"
 echo -e "${YELLOW}⚡ Check interval:${NC} ${DELIVERY_INTERVAL}s"
 echo -e "${YELLOW}🔄 Max retries:${NC} $MAX_RETRIES"
+echo -e "${YELLOW}⏱️  Rate limit:${NC} $RATE_LIMIT/min"
+echo -e "${YELLOW}📊 History:${NC} $MAX_HISTORY hashes"
 echo -e "${BLUE}════════════════════════════════════════════════════════════${NC}"
 echo ""
 
 # Validate Bitcoin address
 if ! validate_address "$BTC_ADDR"; then
     echo -e "${RED}⚠️  WARNING: Invalid Bitcoin address format!${NC}"
-    echo -e "${YELLOW}Please update BTC_ADDR in the script.${NC}"
+    echo -e "${YELLOW}Please update BTC_ADDR in the script or config.${NC}"
     echo ""
 fi
 
@@ -242,7 +367,6 @@ fi
 
 # Main loop
 while true; do
-    # Check if we have a new bridge hash
     NEW_HASH=""
     NEW_ENIGMA=""
     NEW_COUNT=""
@@ -252,7 +376,6 @@ while true; do
         LATEST=$(cat "$LOG_DIR/latest_bridge.txt" 2>/dev/null)
         
         if [ -n "$LATEST" ] && [ "$LATEST" != "$LAST_HASH" ]; then
-            # Parse the bridge data (format: SHA|ENIGMA|COUNT|TIME)
             HASH_VALUE=$(echo "$LATEST" | cut -d'|' -f1 2>/dev/null)
             ENIGMA_VALUE=$(echo "$LATEST" | cut -d'|' -f2 2>/dev/null)
             COUNT_VALUE=$(echo "$LATEST" | cut -d'|' -f3 2>/dev/null)
@@ -268,10 +391,8 @@ while true; do
     
     # If no new hash, try reading from bridge log
     if [ -z "$NEW_HASH" ] && [ -f "$BRIDGE_LOG" ]; then
-        # Get the latest bridge hash from the log
         LATEST_BRIDGE=$(tail -1 "$BRIDGE_LOG" 2>/dev/null)
         if [ -n "$LATEST_BRIDGE" ]; then
-            # Format: timestamp,SHA_HASH,COUNT,BTC_ADDR
             HASH_VALUE=$(echo "$LATEST_BRIDGE" | cut -d',' -f2 2>/dev/null)
             if [ -n "$HASH_VALUE" ] && [ "$HASH_VALUE" != "$LAST_HASH" ]; then
                 NEW_HASH="$HASH_VALUE"
@@ -293,6 +414,12 @@ while true; do
         echo "   🆔 Transport ID: $TX_ID"
         echo "   📤 Destination: $POOL"
         echo "   📬 Wallet: ${BTC_ADDR:0:20}..."
+        
+        # Check if already processed
+        if is_processed "$NEW_HASH"; then
+            echo -e "   ${YELLOW}⏭️  Hash already processed, skipping${NC}"
+            continue
+        fi
         
         # Attempt delivery
         echo -e "${CYAN}   ⏳ Delivering...${NC}"
@@ -360,8 +487,8 @@ cleanup() {
     exit 0
 }
 
-# Trap Ctrl+C for clean exit
-trap cleanup SIGINT SIGTERM
+# Trap signals
+trap cleanup SIGINT SIGTERM SIGHUP
 
 # ============================================================
 # 📌 NOTES
@@ -369,52 +496,27 @@ trap cleanup SIGINT SIGTERM
 # 
 # To stop: Press Ctrl+C
 # 
+# Commands:
+#   ./igigi_transporter.sh --health-check  # Check status
+#   ./igigi_transporter.sh --version       # Show version
+# 
 # View logs:
 #   tail -f ~/.marduk/delivery.log        # All deliveries
 #   tail -f ~/.marduk/transport.log       # Detailed log
 #   cat ~/.marduk/latest_transport.txt    # Latest transport
 #   tail -f ~/.marduk/failed_deliveries.log  # Failed deliveries
-#   tail -f ~/.marduk/transporter_stats.log  # Statistics
 # 
 # ============================================================
 
 # ============================================================
-# 🔗 INTEGRATION WITH OTHER MARDUK SCRIPTS
+# 📝 CONFIG FILE EXAMPLE (~/.marduk/transporter.conf)
 # ============================================================
 # 
-# The Transporter works with:
-# 
-# 1. Marduk Bridge (marduk_bridge.sh)
-#    - Reads hashes from ~/.marduk/latest_bridge.txt
-#    - Delivers them to the mining pool
-# 
-# 2. Marduk Engine (marduk_engine.sh)
-#    - Receives resonance peaks
-#    - Converts them to transportable hashes
-# 
-# 3. Marduk Watchdog (marduk_watchdog.sh)
-#    - Monitors the transporter
-#    - Restarts if needed
-# 
-# ============================================================
-
-# ============================================================
-# ⛏️ REAL MINING POOL INTEGRATION
-# ============================================================
-# 
-# To actually submit to a mining pool, replace the
-# deliver_to_pool() function with:
-# 
-# deliver_to_pool() {
-#     local hash="$1"
-#     local address="$2"
-#     
-#     # For Stratum protocol
-#     echo "{\"id\":1,\"method\":\"mining.subscribe\",\"params\":[]}" | nc pool-host 21496
-#     echo "{\"id\":2,\"method\":\"mining.authorize\",\"params\":[\"$address\",\"x\"]}" | nc pool-host 21496
-#     echo "{\"id\":3,\"method\":\"mining.submit\",\"params\":[\"$address\",\"$hash\"]}" | nc pool-host 21496
-#     
-#     return $?
-# }
+# BTC_ADDR="your_address_here"
+# POOL="stratum+tcp://your-pool:port"
+# DELIVERY_INTERVAL=2
+# MAX_RETRIES=5
+# RATE_LIMIT=20
+# MAX_HISTORY=2000
 # 
 # ============================================================
