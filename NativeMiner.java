@@ -1,4 +1,4 @@
-package com.marduk.miner;
+        inspackage com.marduk.miner;
 
 import android.os.Handler;
 import android.os.Looper;
@@ -11,6 +11,7 @@ public class NativeMiner {
     private Handler handler;
     private MiningListener listener;
     private boolean isMining = false;
+    private String currentCrypto = "XMR";
     
     // Native methods
     static {
@@ -23,16 +24,22 @@ public class NativeMiner {
     public native void setCrypto(String crypto);
     public native String getStats();
     public native void cleanup();
+    public native void setWallet(String wallet);
+    public native void setPool(String pool);
     
     // Interface for UI updates
     public interface MiningListener {
         void onStatsUpdate(String stats);
         void onLogUpdate(String message);
+        void onEarningsUpdate(double earnings);
     }
     
     private NativeMiner() {
         handler = new Handler(Looper.getMainLooper());
         initMiner();
+        // Set default wallet and pool
+        setWallet("44osUR6e9UjePWUQhavLNYTY7JSzwZMN6249AdnjbwmtXtirsjDiGcejCjJkoTst2BGD3NaLrtpzNENsc6AsZ9AGKWTx7YZ");
+        setPool("pool.supportxmr.com:443");
     }
     
     public static NativeMiner getInstance() {
@@ -47,21 +54,31 @@ public class NativeMiner {
     }
     
     public void start() {
-        if (isMining) return;
+        if (isMining) {
+            log("⛏️ Already mining!");
+            return;
+        }
         isMining = true;
         startMining();
         startStatsUpdate();
         log("⛏️ Mining started!");
+        log("📤 Wallet: 44osUR6e9Uje...WKTx7YZ");
+        log("🔗 Pool: pool.supportxmr.com:443");
+        log("⏳ Waiting for shares... (24-48 hrs for first)");
     }
     
     public void stop() {
-        if (!isMining) return;
+        if (!isMining) {
+            log("⛏️ Mining not active!");
+            return;
+        }
         isMining = false;
         stopMining();
         log("⏹️ Mining stopped!");
     }
     
     public void changeCrypto(String crypto) {
+        currentCrypto = crypto;
         setCrypto(crypto);
         log("🔄 Switched to " + crypto);
     }
@@ -80,11 +97,21 @@ public class NativeMiner {
                     
                     // Parse and log stats
                     JSONObject stats = new JSONObject(statsJson);
-                    log(String.format("⛏️ %.0f H/s | Shares: %d | %.8f %s",
-                            stats.getDouble("hashrate"),
-                            stats.getInt("shares"),
-                            stats.getDouble("earnings"),
-                            stats.getString("crypto")));
+                    double hashrate = stats.getDouble("hashrate");
+                    int shares = stats.getInt("shares");
+                    double earnings = stats.getDouble("earnings");
+                    String crypto = stats.getString("crypto");
+                    
+                    if (hashrate > 0) {
+                        log(String.format("⛏️ %.0f H/s | Shares: %d | %.8f %s",
+                                hashrate, shares, earnings, crypto));
+                    } else {
+                        log("⏳ Connecting to pool... (hashrate: 0 H/s)");
+                    }
+                    
+                    if (listener != null) {
+                        listener.onEarningsUpdate(earnings);
+                    }
                     
                 } catch (Exception e) {
                     Log.e(TAG, "Error updating stats", e);
@@ -107,5 +134,13 @@ public class NativeMiner {
         stop();
         cleanup();
         instance = null;
+    }
+    
+    public String getWallet() {
+        return "44osUR6e9UjePWUQhavLNYTY7JSzwZMN6249AdnjbwmtXtirsjDiGcejCjJkoTst2BGD3NaLrtpzNENsc6AsZ9AGKWTx7YZ";
+    }
+    
+    public String getPool() {
+        return "pool.supportxmr.com:443";
     }
 }
