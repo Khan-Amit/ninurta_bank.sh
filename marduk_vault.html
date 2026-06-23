@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Marduk Vault · Frequency Core</title>
     <style>
+        /* ============================================================
+           STYLES – You don't need to change anything here
+           ============================================================ */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: #000000;
@@ -90,10 +93,63 @@
             font-size: 0.7rem;
             color: #ffcc88;
         }
+        /* INSTRUCTIONS BOX – visible only in the file, not on the page */
+        .instructions {
+            display: none; /* Hides this from the page – it's just for your reference */
+        }
         @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
+
+<!-- ============================================================
+     INSTRUCTIONS (hidden from view – read them here!)
+     ============================================================ -->
+<div class="instructions">
+    ============================================================
+    📝 HOW TO CUSTOMIZE THIS FILE
+    ============================================================
+
+    🔧 WHAT TO CHANGE:
+
+    1. CRYPTO ADDRESS (line ~156)
+       Look for: const CRYPTO_ADDR = "YOUR_ADDRESS_HERE";
+       Replace with your own wallet address.
+
+    2. CRYPTO TYPE (line ~157)
+       Look for: const CRYPTO_TYPE = "XMR"; // Options: XMR, BTC, LTC, DOGE, DEMO
+       Change to one of: "BTC", "LTC", "DOGE", or "DEMO"
+
+    3. API ENDPOINT (line ~184)
+       If you're using a different crypto, you may need to change the API URL.
+       See the "API Reference" section below.
+
+    ============================================================
+    📡 API REFERENCE (for developers)
+    ============================================================
+
+    | Crypto | API URL (replace {ADDRESS})                          |
+    |--------|------------------------------------------------------|
+    | XMR    | https://xmrchain.net/api/address/{ADDRESS}          |
+    | BTC    | https://blockchain.info/q/addressbalance/{ADDRESS}  |
+    | LTC    | https://chain.so/api/v2/get_address_balance/LTC/    |
+    | DOGE   | https://chain.so/api/v2/get_address_balance/DOGE/   |
+    | DEMO   | (no API – shows fake balance)                       |
+
+    ============================================================
+    💡 TIPS
+    ============================================================
+
+    - For TESTNET Bitcoin, add ?testnet=true to the API URL
+    - For privacy coins like XMR, balance may show 0 until you send funds
+    - The "shares" and "resonance" numbers are random simulations
+
+    ============================================================
+</div>
+
+<!-- ============================================================
+     PAGE CONTENT – No changes needed here
+     ============================================================ -->
 <div class="vault">
     <div class="header">
         <div class="title">🌀 MARDUK FREQUENCY VAULT</div>
@@ -104,7 +160,7 @@
             <div class="stat-box">
                 <div>📊 REAL SHARES (Termux)</div>
                 <div class="stat-number" id="shareCount">0</div>
-                <div class="btc-number" id="btcBalance">0 BTC</div>
+                <div class="btc-number" id="cryptoBalance">0.00000000</div>
             </div>
             <div class="stat-box">
                 <div>🌀 RESONANCE PEAKS</div>
@@ -119,18 +175,54 @@
             <div class="terminal-header">📡 MARDUK TERMINAL</div>
             <div class="terminal-log" id="terminalLog">
                 <div class="log-line">> MARDUK VAULT ONLINE</div>
-                <div class="log-line">> Fetching real BTC balance...</div>
+                <div class="log-line">> Fetching real balance...</div>
             </div>
         </div>
     </div>
-    <div class="footer">🔗 real-time BTC from blockchain · resonance from Enigma</div>
+    <div class="footer">🔗 real-time crypto from blockchain · resonance from Enigma</div>
 </div>
 
+<!-- ============================================================
+     JAVASCRIPT – ⚠️ CHANGE YOUR ADDRESS AND CRYPTO TYPE HERE!
+     ============================================================ -->
 <script>
-    const BTC_ADDR = "bc1qk7ajtrgplvn25600wm7gx9u5c5nk8kz9dfpcqy";
+    // ============================================================
+    // 🛠️ USER SETTINGS – CHANGE THESE TWO LINES ONLY!
+    // ============================================================
+    
+    const CRYPTO_ADDR = "44osUR6e9UjePWUQhavLNYTY7JSzwZMN6249AdnjbwmtXtirsjDiGcejCjJkoTst2BGD3NaLrtpzNENsc6AsZ9AGKWTx7YZ";  // <-- YOUR WALLET ADDRESS
+    const CRYPTO_TYPE = "XMR";  // Options: "XMR", "BTC", "LTC", "DOGE", "DEMO"
+    
+    // ============================================================
+    // ⚙️ ADVANCED SETTINGS (optional – change if you know what you're doing)
+    // ============================================================
+    
+    // If using BTC testnet, change to true
+    const USE_TESTNET = false;
+    
+    // How often to refresh balance (milliseconds)
+    const REFRESH_INTERVAL = 30000; // 30 seconds
+    
+    // ============================================================
+    // 🧠 CODE – Don't change anything below unless you're a developer
+    // ============================================================
+    
     let shares = 0;
     let peaks = 0;
-
+    let cryptoName = CRYPTO_TYPE;
+    
+    // Get the crypto symbol and API URL based on type
+    function getCryptoConfig() {
+        const configs = {
+            "XMR": { symbol: "XMR", api: `https://xmrchain.net/api/address/${CRYPTO_ADDR}`, decimals: 12 },
+            "BTC": { symbol: "BTC", api: `https://blockchain.info/q/addressbalance/${CRYPTO_ADDR}${USE_TESTNET ? '?testnet=true' : ''}`, decimals: 8 },
+            "LTC": { symbol: "LTC", api: `https://chain.so/api/v2/get_address_balance/LTC/${CRYPTO_ADDR}`, decimals: 8 },
+            "DOGE": { symbol: "DOGE", api: `https://chain.so/api/v2/get_address_balance/DOGE/${CRYPTO_ADDR}`, decimals: 8 },
+            "DEMO": { symbol: "DEMO", api: null, decimals: 8 }
+        };
+        return configs[CRYPTO_TYPE] || configs["DEMO"];
+    }
+    
     function addLog(msg) {
         let term = document.getElementById('terminalLog');
         let div = document.createElement('div');
@@ -140,18 +232,71 @@
         term.scrollTop = term.scrollHeight;
         if(term.children.length > 100) term.removeChild(term.children[0]);
     }
-
-    async function fetchRealBTC() {
+    
+    async function fetchRealBalance() {
+        const config = getCryptoConfig();
+        const el = document.getElementById('cryptoBalance');
+        
         try {
-            let res = await fetch(`https://blockchain.info/q/addressbalance/${BTC_ADDR}`);
-            let sat = parseInt(await res.text());
-            let btc = sat / 100000000;
-            document.getElementById('btcBalance').innerHTML = btc.toFixed(8) + ' BTC';
-            if(sat > 0) addLog(`💰 Real BTC detected: ${btc.toFixed(8)} BTC`);
-            return sat;
-        } catch(e) { addLog(`⚠️ Balance fetch failed`); return 0; }
+            // If DEMO mode, show fake balance
+            if (CRYPTO_TYPE === "DEMO") {
+                let fakeBalance = (Math.random() * 10).toFixed(8);
+                el.innerHTML = fakeBalance + ' ' + config.symbol + ' (DEMO)';
+                addLog(`🎮 Demo balance: ${fakeBalance} ${config.symbol}`);
+                return;
+            }
+            
+            // For XMR
+            if (CRYPTO_TYPE === "XMR") {
+                let res = await fetch(config.api);
+                let data = await res.json();
+                if (data && data.balance !== undefined) {
+                    let balance = data.balance / Math.pow(10, config.decimals);
+                    el.innerHTML = balance.toFixed(8) + ' ' + config.symbol;
+                    addLog(`💰 Balance: ${balance.toFixed(8)} ${config.symbol}`);
+                } else {
+                    el.innerHTML = '0.00000000 ' + config.symbol;
+                    addLog(`⏳ No ${config.symbol} detected`);
+                }
+                return;
+            }
+            
+            // For BTC (blockchain.info returns raw satoshis)
+            if (CRYPTO_TYPE === "BTC") {
+                let res = await fetch(config.api);
+                let sat = parseInt(await res.text());
+                let balance = sat / Math.pow(10, config.decimals);
+                el.innerHTML = balance.toFixed(8) + ' ' + config.symbol;
+                if (sat > 0) addLog(`💰 Balance: ${balance.toFixed(8)} ${config.symbol}`);
+                else addLog(`⏳ No ${config.symbol} detected`);
+                return;
+            }
+            
+            // For LTC and DOGE (chain.so API)
+            if (CRYPTO_TYPE === "LTC" || CRYPTO_TYPE === "DOGE") {
+                let res = await fetch(config.api);
+                let data = await res.json();
+                if (data && data.data && data.data.confirmed_balance !== undefined) {
+                    let balance = parseFloat(data.data.confirmed_balance);
+                    el.innerHTML = balance.toFixed(8) + ' ' + config.symbol;
+                    addLog(`💰 Balance: ${balance.toFixed(8)} ${config.symbol}`);
+                } else {
+                    el.innerHTML = '0.00000000 ' + config.symbol;
+                    addLog(`⏳ No ${config.symbol} detected`);
+                }
+                return;
+            }
+            
+            // Fallback: show address only
+            el.innerHTML = '0.00000000 ' + config.symbol;
+            addLog(`📬 Address set: ${CRYPTO_ADDR.substring(0, 20)}...`);
+            
+        } catch(e) {
+            addLog(`⚠️ Error fetching balance: ${e.message}`);
+            el.innerHTML = '⚠️ ERROR';
+        }
     }
-
+    
     async function fetchShares() {
         let simulated = Math.floor(Math.random() * 200) + 25000;
         shares = simulated;
@@ -160,17 +305,23 @@
         document.getElementById('peakCount').innerText = peaks;
         addLog(`⛏️ Shares: ${shares} | Resonance: ${peaks}`);
     }
-
+    
+    // Refresh button
     document.getElementById('refreshBtn').onclick = () => {
-        fetchRealBTC();
+        fetchRealBalance();
         fetchShares();
         addLog(`🔄 Manual refresh`);
     };
-
-    fetchRealBTC();
+    
+    // Initial load
+    addLog(`🔐 Vault initialized with ${CRYPTO_TYPE} address`);
+    fetchRealBalance();
     fetchShares();
-    setInterval(fetchRealBTC, 30000);
+    
+    // Auto-refresh
+    setInterval(fetchRealBalance, REFRESH_INTERVAL);
     setInterval(fetchShares, 15000);
 </script>
+
 </body>
 </html>
