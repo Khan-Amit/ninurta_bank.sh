@@ -2,13 +2,13 @@
     "autosave": true,
     "cpu": {
         "enabled": true,
-        "huge-pages": true,
+        "huge-pages": false,
         "huge-pages-jit": false,
         "hw-aes": null,
         "priority": null,
         "memory-pool": true,
         "yield": true,
-        "max-threads-hint": 50,
+        "max-threads-hint": 25,
         "asm": true,
         "argon2-impl": null,
         "cn/0": false,
@@ -16,10 +16,10 @@
     },
     "pools": [
         {
-            "url": "pool.supportxmr.com:3333",
+            "url": "pool.supportxmr.com:443",
             "user": "44osUR6e9UjePWUQhavLNYTY7JSzwZMN6249AdnjbwmtXtirsjDiGcejCjJkoTst2BGD3NaLrtpzNENsc6AsZ9AGKWTx7YZ",
             "pass": "ninurta_rig",
-            "tls": false,
+            "tls": true,
             "keepalive": true,
             "nicehash": false
         }
@@ -40,10 +40,10 @@
         "init": -1,
         "mode": "auto",
         "1gb-pages": false,
-        "rdmsr": true,
-        "wrmsr": true,
+        "rdmsr": false,
+        "wrmsr": false,
         "cache_qos": false,
-        "numa": true,
+        "numa": false,
         "scratchpad_prefetch_mode": 1
     }
 }
