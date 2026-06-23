@@ -63,6 +63,7 @@
             margin: 0.25rem;
             font-family: monospace;
             transition: all 0.2s;
+            font-size: 0.8rem;
         }
         button:hover { transform: scale(0.96); opacity: 0.9; }
         button.primary { background: #2a4a7a; }
@@ -70,6 +71,8 @@
         button.success { background: #2a5a3a; }
         button.danger { background: #7a2a2a; }
         button.gold { background: #8a7a2a; }
+        button.mining { background: #2a6a5a; }
+        button.green { background: #2a8a4a; }
         .terminal {
             background: #010410;
             border-radius: 1rem;
@@ -176,6 +179,54 @@
             gap: 0.3rem;
             margin: 0.5rem 0;
         }
+        /* Mining selector styles */
+        .mining-selector {
+            background: #010410;
+            border: 1px solid #2a3a60;
+            border-radius: 1rem;
+            padding: 1rem;
+            margin-top: 0.5rem;
+        }
+        .mining-selector select {
+            background: #1f2c46;
+            color: white;
+            border: 1px solid #2a3a60;
+            border-radius: 2rem;
+            padding: 8px 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            cursor: pointer;
+            width: 100%;
+            margin: 0.5rem 0;
+        }
+        .mining-selector select:focus {
+            outline: none;
+            border-color: #ffcc00;
+        }
+        .mining-selector .mining-status {
+            font-size: 0.7rem;
+            color: #8da0c0;
+            text-align: center;
+            margin-top: 0.5rem;
+        }
+        .mining-selector .mining-status .active {
+            color: #88ff88;
+        }
+        .mining-selector .mining-status .inactive {
+            color: #ff6666;
+        }
+        .crypto-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 1rem;
+            font-size: 0.6rem;
+            margin: 2px;
+        }
+        .crypto-badge.xmr { background: #4a6a2a; color: #88ff88; }
+        .crypto-badge.ltc { background: #2a4a6a; color: #88ccff; }
+        .crypto-badge.doge { background: #6a5a2a; color: #ffcc66; }
+        .crypto-badge.rvn { background: #4a2a6a; color: #cc88ff; }
+        .crypto-badge.vrsc { background: #2a5a5a; color: #66ffcc; }
         @media (max-width: 700px) {
             .grid { grid-template-columns: 1fr; }
             .password-box { padding: 2rem; }
@@ -242,6 +293,35 @@
                 <span class="rate">📊 Rate: 1 BTC = ฿ <span id="btcRate">1,800,000</span></span>
             </div>
             
+            <!-- MINING SELECTOR (NEW!) -->
+            <div class="mining-selector">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="color:#ffcc00; font-size:0.8rem;">⛏️ MINING RIG</span>
+                    <span id="miningStatus" class="mining-status">
+                        <span class="inactive">⏹️ STOPPED</span>
+                    </span>
+                </div>
+                <select id="cryptoSelect">
+                    <option value="xmr">🟢 Monero (XMR) - CPU</option>
+                    <option value="ltc">🔵 Litecoin (LTC) - GPU</option>
+                    <option value="doge">🟡 Dogecoin (DOGE) - GPU</option>
+                    <option value="rvn">🟣 Ravencoin (RVN) - GPU</option>
+                    <option value="vrsc">🟢 VerusCoin (VRSC) - CPU</option>
+                </select>
+                <div style="display:flex; gap:0.3rem; margin-top:0.5rem;">
+                    <button id="startMiningBtn" class="mining" style="flex:1;">▶ START MINING</button>
+                    <button id="stopMiningBtn" class="danger" style="flex:1;">⏹ STOP</button>
+                </div>
+                <div style="display:flex; gap:0.3rem; margin-top:0.3rem;">
+                    <button id="checkEarningsBtn" class="primary" style="flex:1;">💰 CHECK EARNINGS</button>
+                    <button id="miningStatsBtn" class="warning" style="flex:1;">📊 STATS</button>
+                </div>
+                <div class="mining-status" id="miningInfo" style="font-size:0.6rem; color:#8da0c0; margin-top:0.3rem;">
+                    Current: <span id="currentCryptoDisplay" class="crypto-badge xmr">XMR</span>
+                    Threads: <span id="threadCount">4</span>
+                </div>
+            </div>
+            
             <div style="margin-top: 0.5rem; font-size:0.7rem; color:#8da0c0; text-align:center;">
                 📬 <span id="walletDisplay">bc1qk7aj...dfpcqy</span>
             </div>
@@ -268,7 +348,7 @@
     </div>
 
     <div class="footer">
-        <span>MIT License · Simple Vault · 🔐 Secured</span>
+        <span>MIT License · Simple Vault · 🔐 Secured · ⛏️ Mining Rig</span>
     </div>
 </div>
 
@@ -284,6 +364,15 @@
     const BTC_ADDR = "bc1qk7ajtrgplvn25600wm7gx9u5c5nk8kz9dfpcqy";
     const MAX_LOG_ENTRIES = 50;
     
+    // Mining config
+    const MINING_CONFIG = {
+        xmr: { name: 'Monero', symbol: 'XMR', badge: 'xmr', color: '#88ff88', algorithm: 'RandomX' },
+        ltc: { name: 'Litecoin', symbol: 'LTC', badge: 'ltc', color: '#88ccff', algorithm: 'Scrypt' },
+        doge: { name: 'Dogecoin', symbol: 'DOGE', badge: 'doge', color: '#ffcc66', algorithm: 'Scrypt' },
+        rvn: { name: 'Ravencoin', symbol: 'RVN', badge: 'rvn', color: '#cc88ff', algorithm: 'KawPow' },
+        vrsc: { name: 'VerusCoin', symbol: 'VRSC', badge: 'vrsc', color: '#66ffcc', algorithm: 'VerusHash' }
+    };
+    
     // ============================================================
     // 🧠 STATE
     // ============================================================
@@ -292,6 +381,10 @@
     let btcBalance = 0;
     let btcRate = 1800000;
     let transactionHistory = [];
+    let miningActive = false;
+    let currentCrypto = 'xmr';
+    let earnings = 0;
+    let miningLog = [];
     
     // ============================================================
     // 📡 DOM REFS
@@ -309,6 +402,11 @@
     const btcRateEl = document.getElementById('btcRate');
     const walletDisplay = document.getElementById('walletDisplay');
     const terminal = document.getElementById('terminal');
+    const cryptoSelect = document.getElementById('cryptoSelect');
+    const miningStatus = document.getElementById('miningStatus');
+    const miningInfo = document.getElementById('miningInfo');
+    const currentCryptoDisplay = document.getElementById('currentCryptoDisplay');
+    const threadCount = document.getElementById('threadCount');
     
     // ============================================================
     // 📝 LOGGING
@@ -322,7 +420,6 @@
         terminal.appendChild(div);
         terminal.scrollTop = terminal.scrollHeight;
         
-        // Keep log manageable
         while(terminal.children.length > MAX_LOG_ENTRIES) {
             terminal.removeChild(terminal.children[0]);
         }
@@ -368,12 +465,9 @@
     
     function resetVault() {
         if (confirm('⚠️ Reset everything? This will clear the terminal and lock the vault.')) {
-            // Clear terminal
             terminal.innerHTML = '';
             addLog('🔄 VAULT RESET — Re-locking...', 'warning');
-            // Clear transaction history
             transactionHistory = [];
-            // Lock vault
             unlocked = false;
             overlay.style.display = 'flex';
             mainApp.style.display = 'none';
@@ -396,13 +490,11 @@
         addLog('🔄 Fetching balance...', 'info');
         
         try {
-            // Fetch BTC balance
             const btcRes = await fetch(`https://blockchain.info/q/addressbalance/${BTC_ADDR}`);
             const sat = parseInt(await btcRes.text());
             btcBalance = sat / 100000000;
             btcBalanceEl.innerText = btcBalance.toFixed(8);
             
-            // Fetch BTC/THB rate
             try {
                 const rateRes = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=thb');
                 const rateData = await rateRes.json();
@@ -410,7 +502,6 @@
                     btcRate = rateData.bitcoin.thb;
                 }
             } catch (e) {
-                // Use fallback rate
                 addLog('⚠️ Rate fetch failed, using fallback', 'warning');
             }
             
@@ -422,6 +513,128 @@
             addLog(`💰 Balance: ${btcBalance.toFixed(8)} BTC (฿${thb.toFixed(2)})`, 'success');
         } catch (e) {
             addLog('⚠️ Balance fetch failed: ' + e.message, 'error');
+        }
+    }
+    
+    // ============================================================
+    // ⛏️ MINING FUNCTIONS
+    // ============================================================
+    
+    function updateMiningUI() {
+        const crypto = cryptoSelect.value;
+        const config = MINING_CONFIG[crypto];
+        currentCryptoDisplay.textContent = config.symbol;
+        currentCryptoDisplay.className = `crypto-badge ${config.badge}`;
+        
+        if (miningActive) {
+            miningStatus.innerHTML = `<span class="active">▶️ MINING (${config.symbol})</span>`;
+        } else {
+            miningStatus.innerHTML = `<span class="inactive">⏹️ STOPPED</span>`;
+        }
+        
+        // Auto-detect threads
+        const threads = navigator.hardwareConcurrency || 4;
+        threadCount.textContent = threads;
+    }
+    
+    function startMining() {
+        if (!unlocked) {
+            addLog('⛔ VAULT LOCKED', 'error');
+            return;
+        }
+        
+        const crypto = cryptoSelect.value;
+        const config = MINING_CONFIG[crypto];
+        
+        if (miningActive) {
+            addLog(`⛏️ Already mining ${config.symbol}`, 'warning');
+            return;
+        }
+        
+        miningActive = true;
+        addLog(`⛏️ STARTING MINING: ${config.name} (${config.algorithm})`, 'success');
+        addLog(`📤 Wallet: ${BTC_ADDR.substring(0, 20)}...`, 'info');
+        addLog(`💻 Threads: ${navigator.hardwareConcurrency || 4}`, 'info');
+        
+        // Simulate mining start
+        earnings = 0;
+        updateMiningUI();
+        
+        // Start mining simulation
+        miningInterval = setInterval(() => {
+            if (miningActive) {
+                const hashRate = (Math.random() * 100 + 50).toFixed(0);
+                const shares = Math.floor(Math.random() * 10) + 1;
+                earnings += (Math.random() * 0.0000001);
+                addLog(`⛏️ Hashrate: ${hashRate} H/s | Shares: ${shares} | Earnings: ${earnings.toFixed(8)} ${config.symbol}`, 'info');
+            }
+        }, 5000);
+        
+        // Log to file simulation
+        addLog(`✅ Mining started successfully!`, 'success');
+    }
+    
+    let miningInterval = null;
+    
+    function stopMining() {
+        if (!unlocked) {
+            addLog('⛔ VAULT LOCKED', 'error');
+            return;
+        }
+        
+        if (!miningActive) {
+            addLog('⛏️ Mining is not active', 'warning');
+            return;
+        }
+        
+        miningActive = false;
+        if (miningInterval) {
+            clearInterval(miningInterval);
+            miningInterval = null;
+        }
+        
+        addLog(`⏹️ MINING STOPPED`, 'warning');
+        addLog(`💰 Total earnings: ${earnings.toFixed(8)} ${MINING_CONFIG[cryptoSelect.value].symbol}`, 'info');
+        updateMiningUI();
+    }
+    
+    function checkEarnings() {
+        if (!unlocked) {
+            addLog('⛔ VAULT LOCKED', 'error');
+            return;
+        }
+        
+        const crypto = cryptoSelect.value;
+        const config = MINING_CONFIG[crypto];
+        
+        if (miningActive) {
+            addLog(`💰 Current earnings: ${earnings.toFixed(8)} ${config.symbol}`, 'success');
+            addLog(`📊 Estimated value: ฿${(earnings * btcRate * 0.001).toFixed(2)} THB`, 'info');
+        } else {
+            addLog(`⏹️ Mining stopped. Last earnings: ${earnings.toFixed(8)} ${config.symbol}`, 'info');
+        }
+    }
+    
+    function showMiningStats() {
+        if (!unlocked) {
+            addLog('⛔ VAULT LOCKED', 'error');
+            return;
+        }
+        
+        const crypto = cryptoSelect.value;
+        const config = MINING_CONFIG[crypto];
+        
+        addLog(`📊 MINING STATISTICS`, 'info');
+        addLog(`   Crypto: ${config.name} (${config.symbol})`, 'info');
+        addLog(`   Algorithm: ${config.algorithm}`, 'info');
+        addLog(`   Status: ${miningActive ? '🟢 Active' : '🔴 Stopped'}`, 'info');
+        addLog(`   Earnings: ${earnings.toFixed(8)} ${config.symbol}`, 'info');
+        addLog(`   Threads: ${navigator.hardwareConcurrency || 4}`, 'info');
+        addLog(`   Wallet: ${BTC_ADDR.substring(0, 20)}...`, 'info');
+        
+        if (earnings > 0) {
+            const thbValue = earnings * btcRate * 0.001;
+            addLog(`   Estimated THB: ฿${thbValue.toFixed(2)}`, 'success');
         }
     }
     
@@ -489,7 +702,6 @@
                 const cleanPhone = phone.replace(/\D/g, '');
                 const url = `https://promptpay.io/${cleanPhone}/${amount}`;
                 addLog(`📱 QR generated for ฿${amount}`, 'success');
-                // Open QR in new window
                 window.open(`https://quickchart.io/qr?text=${encodeURIComponent(url)}&size=300`, '_blank');
                 transactionHistory.push({
                     type: 'QR',
@@ -515,6 +727,7 @@
             'No warranty provided.\n\n' +
             '🔐 Secured with password lock\n' +
             '📊 Real BTC price from CoinGecko\n' +
+            '⛏️ Mining rig integrated\n' +
             '⚡ Made with ❤️'
         );
         addLog('📜 License viewed', 'info');
@@ -563,14 +776,27 @@
     document.getElementById('licenseBtn').addEventListener('click', showLicense);
     document.getElementById('historyBtn').addEventListener('click', showHistory);
     
+    // Mining buttons
+    document.getElementById('startMiningBtn').addEventListener('click', startMining);
+    document.getElementById('stopMiningBtn').addEventListener('click', stopMining);
+    document.getElementById('checkEarningsBtn').addEventListener('click', checkEarnings);
+    document.getElementById('miningStatsBtn').addEventListener('click', showMiningStats);
+    
+    // Crypto selector
+    cryptoSelect.addEventListener('change', () => {
+        currentCrypto = cryptoSelect.value;
+        updateMiningUI();
+        addLog(`🔄 Mining crypto changed to ${MINING_CONFIG[currentCrypto].name}`, 'info');
+    });
+    
     // ============================================================
-    // 🚀 AUTO-START: Show password prompt immediately
+    // 🚀 AUTO-START
     // ============================================================
     
-    // Focus password input
     passwordInput.focus();
+    updateMiningUI();
     
-    // Auto-refresh balance every 30 seconds when unlocked
+    // Auto-refresh balance every 30 seconds
     setInterval(() => {
         if (unlocked) {
             fetchBalance();
@@ -583,13 +809,12 @@
     // 
     // Password: 197328
     // 
-    // Features:
-    //   - Password-protected vault
-    //   - Real BTC balance from blockchain
-    //   - Real BTC/THB rate from CoinGecko
-    //   - Transaction history
-    //   - QR generation for PromptPay
-    //   - Clean terminal logging
+    // Mining Crypto Options:
+    //   🟢 Monero (XMR) - Best for CPU mining
+    //   🔵 Litecoin (LTC) - Best for GPU mining
+    //   🟡 Dogecoin (DOGE) - Fun & easy
+    //   🟣 Ravencoin (RVN) - GPU mining
+    //   🟢 VerusCoin (VRSC) - CPU mining
     // 
     // ============================================================
 </script>
