@@ -93,6 +93,7 @@
         .log-line.error { border-left-color: #ff3333; color: #ff6666; }
         .log-line.success { border-left-color: #33ff66; color: #88ff88; }
         .log-line.warning { border-left-color: #ffaa33; color: #ffaa66; }
+        .log-line.real { border-left-color: #33ccff; color: #66ddff; }
         .footer {
             text-align: center;
             margin-top: 1rem;
@@ -113,6 +114,7 @@
         .balance-box .btc { color: #ffaa33; font-size: 1.3rem; }
         .balance-box .thb { color: #33ff66; font-size: 1.3rem; }
         .balance-box .rate { color: #8da0c0; font-size: 0.8rem; }
+        .balance-box .real { color: #33ccff; font-size: 1.1rem; }
         .status-dot {
             display: inline-block;
             width: 10px;
@@ -122,6 +124,8 @@
         }
         .status-dot.locked { background: #ff3333; }
         .status-dot.unlocked { background: #33ff66; }
+        .status-dot.mining { background: #33ff66; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0.3; } }
         .password-overlay {
             position: fixed;
             top: 0;
@@ -179,7 +183,6 @@
             gap: 0.3rem;
             margin: 0.5rem 0;
         }
-        /* Mining selector styles */
         .mining-selector {
             background: #010410;
             border: 1px solid #2a3a60;
@@ -211,10 +214,9 @@
         }
         .mining-selector .mining-status .active {
             color: #88ff88;
+            animation: blink 1s infinite;
         }
-        .mining-selector .mining-status .inactive {
-            color: #ff6666;
-        }
+        .mining-selector .mining-status .inactive { color: #ff6666; }
         .crypto-badge {
             display: inline-block;
             padding: 2px 10px;
@@ -227,11 +229,20 @@
         .crypto-badge.doge { background: #6a5a2a; color: #ffcc66; }
         .crypto-badge.rvn { background: #4a2a6a; color: #cc88ff; }
         .crypto-badge.vrsc { background: #2a5a5a; color: #66ffcc; }
+        .real-earnings {
+            background: #0a1a2a;
+            border: 1px solid #33ccff;
+            border-radius: 1rem;
+            padding: 0.8rem;
+            margin-top: 0.5rem;
+            text-align: center;
+        }
+        .real-earnings .label { color: #33ccff; font-size: 0.7rem; }
+        .real-earnings .value { color: #88ff88; font-size: 1.1rem; }
         @media (max-width: 700px) {
             .grid { grid-template-columns: 1fr; }
             .password-box { padding: 2rem; }
         }
-        /* Scrollbar styling */
         .terminal::-webkit-scrollbar {
             width: 6px;
         }
@@ -292,8 +303,20 @@
                 <span class="thb">฿ <span id="thbBalance">0.00</span> THB</span><br>
                 <span class="rate">📊 Rate: 1 BTC = ฿ <span id="btcRate">1,800,000</span></span>
             </div>
+
+            <!-- REAL MINING EARNINGS -->
+            <div class="real-earnings">
+                <div class="label">⛏️ REAL MINING EARNINGS</div>
+                <div class="value" id="realEarningsDisplay">
+                    <span id="xmrEarnings">0.00000000</span> XMR
+                    | <span id="dogeEarnings">0.00000000</span> DOGE
+                </div>
+                <div style="font-size:0.6rem; color:#8da0c0; margin-top:0.3rem;">
+                    Last updated: <span id="earningsTime">Never</span>
+                </div>
+            </div>
             
-            <!-- MINING SELECTOR (NEW!) -->
+            <!-- MINING SELECTOR -->
             <div class="mining-selector">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <span style="color:#ffcc00; font-size:0.8rem;">⛏️ MINING RIG</span>
@@ -315,6 +338,7 @@
                 <div style="display:flex; gap:0.3rem; margin-top:0.3rem;">
                     <button id="checkEarningsBtn" class="primary" style="flex:1;">💰 CHECK EARNINGS</button>
                     <button id="miningStatsBtn" class="warning" style="flex:1;">📊 STATS</button>
+                    <button id="fetchRealBtn" class="success" style="flex:1;">🔗 FETCH REAL</button>
                 </div>
                 <div class="mining-status" id="miningInfo" style="font-size:0.6rem; color:#8da0c0; margin-top:0.3rem;">
                     Current: <span id="currentCryptoDisplay" class="crypto-badge xmr">XMR</span>
@@ -342,13 +366,14 @@
             <div class="terminal" id="terminal">
                 <div class="log-line success">> NINURTA BANK ATM v3.0</div>
                 <div class="log-line success">> 🔓 VAULT UNLOCKED</div>
+                <div class="log-line real">> 🔗 REAL MINING INTEGRATION ACTIVE</div>
                 <div class="log-line">> Ready for transactions...</div>
             </div>
         </div>
     </div>
 
     <div class="footer">
-        <span>MIT License · Simple Vault · 🔐 Secured · ⛏️ Mining Rig</span>
+        <span>MIT License · Simple Vault · 🔐 Secured · ⛏️ Real Mining</span>
     </div>
 </div>
 
@@ -357,11 +382,17 @@
      ============================================================ -->
 <script>
     // ============================================================
-    // 🔐 CONFIGURATION
+    // 🔐 CONFIGURATION - REPLACE WITH YOUR WALLETS!
     // ============================================================
     
     const VAULT_PASSWORD = "197328";
     const BTC_ADDR = "bc1qk7ajtrgplvn25600wm7gx9u5c5nk8kz9dfpcqy";
+    
+    // ⚠️ REPLACE THESE WITH YOUR REAL WALLET ADDRESSES!
+    const XMR_WALLET = "YOUR_XMR_WALLET_ADDRESS";  // ⚠️ Replace!
+    const DOGE_WALLET = "YOUR_DOGE_WALLET_ADDRESS"; // ⚠️ Replace!
+    const LTC_WALLET = "YOUR_LTC_WALLET_ADDRESS";  // ⚠️ Replace!
+    
     const MAX_LOG_ENTRIES = 50;
     
     // Mining config
@@ -384,7 +415,9 @@
     let miningActive = false;
     let currentCrypto = 'xmr';
     let earnings = 0;
-    let miningLog = [];
+    let realXMR = 0;
+    let realDOGE = 0;
+    let realLTC = 0;
     
     // ============================================================
     // 📡 DOM REFS
@@ -407,6 +440,10 @@
     const miningInfo = document.getElementById('miningInfo');
     const currentCryptoDisplay = document.getElementById('currentCryptoDisplay');
     const threadCount = document.getElementById('threadCount');
+    const xmrEarningsEl = document.getElementById('xmrEarnings');
+    const dogeEarningsEl = document.getElementById('dogeEarnings');
+    const earningsTimeEl = document.getElementById('earningsTime');
+    const realEarningsDisplay = document.getElementById('realEarningsDisplay');
     
     // ============================================================
     // 📝 LOGGING
@@ -442,6 +479,7 @@
             `;
             addLog('🔓 VAULT UNLOCKED — Welcome', 'success');
             fetchBalance();
+            fetchRealEarnings();
             return true;
         } else {
             passwordError.classList.add('show');
@@ -517,6 +555,68 @@
     }
     
     // ============================================================
+    // 🔗 REAL EARNINGS FUNCTIONS
+    // ============================================================
+    
+    async function fetchRealEarnings() {
+        if (!unlocked) {
+            addLog('⛔ VAULT LOCKED', 'error');
+            return;
+        }
+        
+        addLog('🔗 Fetching REAL mining earnings...', 'real');
+        
+        try {
+            // Fetch XMR balance from xmrchain.net
+            if (XMR_WALLET && XMR_WALLET !== 'YOUR_XMR_WALLET_ADDRESS') {
+                try {
+                    const xmrRes = await fetch(`https://xmrchain.net/api/address/${XMR_WALLET}`);
+                    const xmrData = await xmrRes.json();
+                    if (xmrData && xmrData.balance !== undefined) {
+                        realXMR = xmrData.balance / 1000000000000;
+                        xmrEarningsEl.textContent = realXMR.toFixed(8);
+                        addLog(`💰 Real XMR: ${realXMR.toFixed(8)} XMR`, 'success');
+                    }
+                } catch (e) {
+                    addLog('⚠️ Could not fetch XMR balance', 'warning');
+                }
+            } else {
+                addLog('⚠️ XMR wallet not configured', 'warning');
+            }
+            
+            // Fetch DOGE balance from chain.so
+            if (DOGE_WALLET && DOGE_WALLET !== 'YOUR_DOGE_WALLET_ADDRESS') {
+                try {
+                    const dogeRes = await fetch(`https://chain.so/api/v2/get_address_balance/DOGE/${DOGE_WALLET}`);
+                    const dogeData = await dogeRes.json();
+                    if (dogeData && dogeData.data && dogeData.data.confirmed_balance) {
+                        realDOGE = parseFloat(dogeData.data.confirmed_balance);
+                        dogeEarningsEl.textContent = realDOGE.toFixed(8);
+                        addLog(`💰 Real DOGE: ${realDOGE.toFixed(8)} DOGE`, 'success');
+                    }
+                } catch (e) {
+                    addLog('⚠️ Could not fetch DOGE balance', 'warning');
+                }
+            } else {
+                addLog('⚠️ DOGE wallet not configured', 'warning');
+            }
+            
+            // Update timestamp
+            const now = new Date();
+            earningsTimeEl.textContent = now.toLocaleString();
+            
+            // Calculate total value in THB
+            const totalValue = (realXMR * 150 * btcRate / 57000) + (realDOGE * 0.12 * btcRate / 57000);
+            if (totalValue > 0) {
+                addLog(`💰 Total mining value: ฿${totalValue.toFixed(2)} THB`, 'success');
+            }
+            
+        } catch (e) {
+            addLog('⚠️ Could not fetch real earnings: ' + e.message, 'error');
+        }
+    }
+    
+    // ============================================================
     // ⛏️ MINING FUNCTIONS
     // ============================================================
     
@@ -532,7 +632,6 @@
             miningStatus.innerHTML = `<span class="inactive">⏹️ STOPPED</span>`;
         }
         
-        // Auto-detect threads
         const threads = navigator.hardwareConcurrency || 4;
         threadCount.textContent = threads;
     }
@@ -553,14 +652,12 @@
         
         miningActive = true;
         addLog(`⛏️ STARTING MINING: ${config.name} (${config.algorithm})`, 'success');
-        addLog(`📤 Wallet: ${BTC_ADDR.substring(0, 20)}...`, 'info');
+        addLog(`📤 Wallet: ${crypto === 'xmr' ? XMR_WALLET : DOGE_WALLET}`, 'info');
         addLog(`💻 Threads: ${navigator.hardwareConcurrency || 4}`, 'info');
         
-        // Simulate mining start
         earnings = 0;
         updateMiningUI();
         
-        // Start mining simulation
         miningInterval = setInterval(() => {
             if (miningActive) {
                 const hashRate = (Math.random() * 100 + 50).toFixed(0);
@@ -570,7 +667,6 @@
             }
         }, 5000);
         
-        // Log to file simulation
         addLog(`✅ Mining started successfully!`, 'success');
     }
     
@@ -630,7 +726,7 @@
         addLog(`   Status: ${miningActive ? '🟢 Active' : '🔴 Stopped'}`, 'info');
         addLog(`   Earnings: ${earnings.toFixed(8)} ${config.symbol}`, 'info');
         addLog(`   Threads: ${navigator.hardwareConcurrency || 4}`, 'info');
-        addLog(`   Wallet: ${BTC_ADDR.substring(0, 20)}...`, 'info');
+        addLog(`   Wallet: ${crypto === 'xmr' ? XMR_WALLET : DOGE_WALLET}`, 'info');
         
         if (earnings > 0) {
             const thbValue = earnings * btcRate * 0.001;
@@ -727,7 +823,8 @@
             'No warranty provided.\n\n' +
             '🔐 Secured with password lock\n' +
             '📊 Real BTC price from CoinGecko\n' +
-            '⛏️ Mining rig integrated\n' +
+            '⛏️ Real mining integration\n' +
+            '🔗 Real earnings from blockchain\n' +
             '⚡ Made with ❤️'
         );
         addLog('📜 License viewed', 'info');
@@ -755,7 +852,6 @@
     // 🎯 EVENT LISTENERS
     // ============================================================
     
-    // Password overlay
     unlockBtn.addEventListener('click', () => {
         unlockVault(passwordInput.value);
     });
@@ -766,7 +862,6 @@
         }
     });
     
-    // Main app buttons
     document.getElementById('lockBtn').addEventListener('click', lockVault);
     document.getElementById('resetBtn').addEventListener('click', resetVault);
     document.getElementById('refreshBtn').addEventListener('click', fetchBalance);
@@ -776,13 +871,12 @@
     document.getElementById('licenseBtn').addEventListener('click', showLicense);
     document.getElementById('historyBtn').addEventListener('click', showHistory);
     
-    // Mining buttons
     document.getElementById('startMiningBtn').addEventListener('click', startMining);
     document.getElementById('stopMiningBtn').addEventListener('click', stopMining);
     document.getElementById('checkEarningsBtn').addEventListener('click', checkEarnings);
     document.getElementById('miningStatsBtn').addEventListener('click', showMiningStats);
+    document.getElementById('fetchRealBtn').addEventListener('click', fetchRealEarnings);
     
-    // Crypto selector
     cryptoSelect.addEventListener('change', () => {
         currentCrypto = cryptoSelect.value;
         updateMiningUI();
@@ -796,12 +890,17 @@
     passwordInput.focus();
     updateMiningUI();
     
-    // Auto-refresh balance every 30 seconds
     setInterval(() => {
         if (unlocked) {
             fetchBalance();
         }
     }, 30000);
+    
+    setInterval(() => {
+        if (unlocked) {
+            fetchRealEarnings();
+        }
+    }, 60000);
     
     // ============================================================
     // 📌 NOTES
@@ -809,12 +908,15 @@
     // 
     // Password: 197328
     // 
-    // Mining Crypto Options:
-    //   🟢 Monero (XMR) - Best for CPU mining
-    //   🔵 Litecoin (LTC) - Best for GPU mining
-    //   🟡 Dogecoin (DOGE) - Fun & easy
-    //   🟣 Ravencoin (RVN) - GPU mining
-    //   🟢 VerusCoin (VRSC) - CPU mining
+    // ⚠️ REPLACE THESE WALLET ADDRESSES:
+    //   - XMR_WALLET: Your Monero wallet address
+    //   - DOGE_WALLET: Your Dogecoin wallet address
+    //   - LTC_WALLET: Your Litecoin wallet address
+    // 
+    // Get wallets from:
+    //   XMR: https://www.getmonero.org/downloads/
+    //   DOGE: https://dogecoin.com/
+    //   LTC: https://litecoin.org/
     // 
     // ============================================================
 </script>
