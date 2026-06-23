@@ -57,36 +57,77 @@ TestResults.xml
 *.coverage
 
 # ============================================================
-# 🔧 MARDUK PROJECT SPECIFIC
+# ⛏️ MARDUK / MINING PROJECT SPECIFIC
 # ============================================================
 
-# Logs
+# Mining logs and data
 *.log
 *.log.*
 logs/
 *.out
 *.err
+*.tmp
+*.temp
 
 # Marduk data directories
 .marduk/
 .marduk_atm/
+.marduk_rig/
+phone_mining_logs/
 !.marduk/README.md
 !.marduk_atm/README.md
+!.marduk_rig/README.md
 
-# Config files (keep example)
+# Mining configuration (keep examples)
 *.conf
 *.conf.local
 *.config
-!config.example.conf
+!config.example.json
+!xmrig_config.example.json
 
-# Generated bridge files
+# Generated bridge and transport files
 latest_bridge.txt
 latest_transport.txt
+slices.out
 slices.tmp
+delivery.log
+resonance_peaks.log
+bridge_hashes.log
+quantum_slices.log
+transactions.log
+failed_deliveries.log
+transporter_stats.log
 
-# Transaction history (keep for reference)
-# Remove these if you want to commit history
-# *.log
+# Mining earnings and stats
+earnings.log
+stats.log
+temperature.log
+mining.log
+delivery.log
+transport.log
+
+# XMRig build files
+xmrig/
+build/
+cmake-build-*/
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+
+# XMRig config (if contains wallet)
+xmrig_config.json
+!xmrig_config.example.json
+
+# Wallet backups and keys
+*.wallet
+*.keys
+*.address
+*.secret
+*.seed
+*.mnemonic
 
 # ============================================================
 # 🐍 Python / General Programming
@@ -270,6 +311,12 @@ keys/
 *_secret.txt
 *.apikey
 
+# Wallet private keys
+*.priv
+*.private
+*.mnemonic
+*.seed
+
 # ============================================================
 # 📦 Dependencies / Builds
 # ============================================================
@@ -305,6 +352,51 @@ coverage/
 *.test
 *.tests
 *.spec
+
+# ============================================================
+# 📱 Mobile / Android Specific
+# ============================================================
+
+# Android build files
+*.apk
+*.aab
+*.dex
+*.odex
+*.vdex
+*.art
+*.oat
+*.jar
+*.class
+gen/
+bin/
+libs/
+obj/
+app/build/
+gradle/
+.gradle/
+local.properties
+*.iml
+.idea/
+.DS_Store
+build/
+captures/
+.externalNativeBuild
+.cxx/
+
+# ============================================================
+# 🖥️ Web / Frontend Specific
+# ============================================================
+
+# Web build outputs
+*.min.js
+*.min.css
+*.map
+dist/
+build/
+static/
+assets/
+*.bundle.js
+*.bundle.css
 
 # ============================================================
 # 📁 Custom User Directories (Add your own)
