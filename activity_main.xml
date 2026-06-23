@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="#0a0e1a">
+
+    <!-- Header -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="📱 MARDUK MINER"
+        android:textSize="24sp"
+        android:textColor="#ffcc00"
+        android:gravity="center"
+        android:paddingBottom="16dp"/>
+
+    <!-- Stats Display -->
+    <TextView
+        android:id="@+id/stats_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#010410"
+        android:padding="16dp"
+        android:textSize="14sp"
+        android:textColor="#88ffaa"
+        android:fontFamily="monospace"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Controls -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginBottom="16dp">
+
+        <Spinner
+            android:id="@+id/crypto_spinner"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="#1f2c46"
+            android:textColor="#ffffff"
+            android:layout_marginEnd="8dp"/>
+
+        <Button
+            android:id="@+id/start_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="▶ START"
+            android:background="#2a5a3a"
+            android:textColor="#ffffff"
+            android:padding="12dp"/>
+
+        <Button
+            android:id="@+id/stop_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⏹ STOP"
+            android:background="#7a2a2a"
+            android:textColor="#ffffff"
+            android:padding="12dp"
+            android:enabled="false"/>
+    </LinearLayout>
+
+    <!-- Log Terminal -->
+    <ScrollView
+        android:id="@+id/log_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="#010410"
+        android:padding="8dp">
+
+        <TextView
+            android:id="@+id/log_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="11sp"
+            android:textColor="#88ffaa"
+            android:fontFamily="monospace"/>
+    </ScrollView>
+
+</LinearLayout>
