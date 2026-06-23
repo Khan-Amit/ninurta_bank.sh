@@ -27,11 +27,9 @@
 // ============================================================
 // 🔧 CONFIGURATION - REPLACE THESE!
 // ============================================================
-
-const std::string WALLET_ADDRESS = "YOUR_WALLET_ADDRESS_HERE";  // ⚠️ REPLACE!
-const std::string POOL_URL = "pool.supportxmr.com:3333";
-const int THREADS = 1;  // Phone has 1-2 threads
-const int MINING_INTERVAL_MS = 5000;  // Update every 5 seconds
+const std::string WALLET_ADDRESS = "YOUR_WALLET_ADDRESS_HERE";
+// ⚠️ Replace with your actual Monero wallet address
+// Example: "44osUR6e9UjePWUQhavLNYTY7JSzwZMN6249AdnjbwmtXtirsjDiGcejCjJkoTst2BGD3NaLrtpzNENsc6AsZ9AGKWTx7YZ"
 
 // ============================================================
 // 📡 CRYPTO ENGINE
