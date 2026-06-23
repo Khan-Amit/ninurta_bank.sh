@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ninurta Bank · Real XMR Miner</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ninurta Bank · Crypto ATM</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -72,9 +72,8 @@
         button.danger { background: #7a2a2a; }
         button.gold { background: #8a7a2a; }
         button.mining { background: #2a6a5a; }
-        button.green { background: #2a8a4a; }
-        button.real { background: #1a5a7a; animation: pulse 2s infinite; }
-        button.xmr { background: #4a6a2a; }
+        button.real { background: #1a5a7a; }
+        button.xmr { background: #4a2a1a; }
         .terminal {
             background: #010410;
             border-radius: 1rem;
@@ -83,7 +82,6 @@
             color: #88ffaa;
             height: 300px;
             overflow-y: auto;
-            font-family: 'Courier New', monospace;
             border: 1px solid #1a2a4a;
         }
         .log-line {
@@ -97,7 +95,6 @@
         .log-line.warning { border-left-color: #ffaa33; color: #ffaa66; }
         .log-line.real { border-left-color: #33ccff; color: #66ddff; }
         .log-line.xmr { border-left-color: #ff6633; color: #ff8866; }
-        .log-line.info { border-left-color: #8866ff; color: #aa88ff; }
         .footer {
             text-align: center;
             margin-top: 1rem;
@@ -118,7 +115,6 @@
         .balance-box .xmr { color: #ff6633; font-size: 1.5rem; }
         .balance-box .btc { color: #ffaa33; font-size: 1.3rem; }
         .balance-box .thb { color: #33ff66; font-size: 1.3rem; }
-        .balance-box .rate { color: #8da0c0; font-size: 0.8rem; }
         .real-earnings {
             background: #0a1a2a;
             border: 2px solid #ff6633;
@@ -148,8 +144,6 @@
         }
         .status-dot.locked { background: #ff3333; }
         .status-dot.unlocked { background: #33ff66; }
-        .status-dot.mining { background: #ff6633; animation: blink 1s infinite; }
-        @keyframes blink { 50% { opacity: 0.3; } }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
         .password-overlay {
             position: fixed;
@@ -219,9 +213,6 @@
             margin: 0.5rem 0;
         }
         .mining-selector select:focus { outline: none; border-color: #ffcc00; }
-        .mining-selector .mining-status { font-size: 0.7rem; color: #8da0c0; text-align: center; margin-top: 0.5rem; }
-        .mining-selector .mining-status .active { color: #ff6633; animation: blink 1s infinite; }
-        .mining-selector .mining-status .inactive { color: #ff6666; }
         .crypto-badge {
             display: inline-block;
             padding: 2px 10px;
@@ -230,8 +221,6 @@
             margin: 2px;
         }
         .crypto-badge.xmr { background: #4a2a1a; color: #ff6633; }
-        .crypto-badge.ltc { background: #2a4a6a; color: #88ccff; }
-        .crypto-badge.doge { background: #6a5a2a; color: #ffcc66; }
         .real-badge {
             display: inline-block;
             padding: 2px 10px;
@@ -241,7 +230,6 @@
             color: #ff6633;
             animation: pulse 2s infinite;
         }
-        .xmr-big { color: #ff6633; font-size: 2rem; font-weight: bold; }
         @media (max-width: 700px) {
             .grid { grid-template-columns: 1fr; }
             .password-box { padding: 2rem; }
@@ -253,7 +241,9 @@
 </head>
 <body>
 
-<!-- PASSWORD OVERLAY -->
+<!-- ============================================================
+     PASSWORD OVERLAY
+     ============================================================ -->
 <div class="password-overlay" id="passwordOverlay">
     <div class="password-box">
         <h2>🏦 NINURTA BANK</h2>
@@ -265,7 +255,9 @@
     </div>
 </div>
 
-<!-- MAIN APP -->
+<!-- ============================================================
+     MAIN APP
+     ============================================================ -->
 <div class="container" id="mainApp" style="display:none;">
     <div class="header">
         <div class="title">🏦 NINURTA BANK ATM</div>
@@ -286,7 +278,7 @@
                 <button id="resetBtn" class="warning">🔄 RESET</button>
             </div>
             
-            <!-- XMR BALANCE (PRIMARY!) -->
+            <!-- XMR BALANCE -->
             <div class="balance-box" style="border-color:#ff6633;">
                 <strong style="color:#ff6633;">⛏️ REAL XMR BALANCE</strong><br>
                 <span class="xmr" id="xmrBalanceDisplay">0.00000000</span> <span style="color:#ff6633;">XMR</span><br>
@@ -294,7 +286,7 @@
                 <span class="rate">📊 1 XMR = ฿ <span id="xmrRate">5,500</span></span>
             </div>
 
-            <!-- BTC BALANCE (SECONDARY) -->
+            <!-- BTC BALANCE -->
             <div class="balance-box" style="border-color:#ffaa33;">
                 <strong style="color:#ffaa33;">💰 BTC BALANCE</strong><br>
                 <span class="btc">₿ <span id="btcBalance">0.00000000</span> BTC</span><br>
@@ -330,7 +322,7 @@
             </div>
             
             <div class="wallet-display">
-                📬 XMR: 44osUR6e9UjePWUQhavLNYTY7JSzwZMN6249AdnjbwmtXtirsjDiGcejCjJkoTst2BGD3NaLrtpzNENsc6AsZ9AGKWTx7YZ
+                📬 XMR: 45ktWDeTNtUcVMXfJRKS6bbXMznMAStZFX6niJHcVy9uQk132bHJ21QTC5AKvqyx9XJN5e7mPc3vViyGnB2BM6DD1ZoAoZb
             </div>
         </div>
 
@@ -350,8 +342,8 @@
                 <div class="log-line success">> 🏦 NINURTA BANK ATM v4.0</div>
                 <div class="log-line success">> 🔓 VAULT UNLOCKED</div>
                 <div class="log-line xmr">> ⛏️ REAL XMR MINING MODE ACTIVE</div>
-                <div class="log-line real">> 📬 Wallet: 44osUR6e9Uje...WKTx7YZ</div>
-                <div class="log-line info">> 🌍 Pool: xmr-ae.kryptex.network:7029 🇦🇪</div>
+                <div class="log-line real">> 📬 Wallet: 45ktWDeTNtUc...ZoAoZb</div>
+                <div class="log-line real">> 🌍 Pool: xmr-ae.kryptex.network:7029 🇦🇪</div>
                 <div class="log-line warning">> ⏳ Waiting for first REAL share (24-48 hrs)</div>
                 <div class="log-line">> Ready for transactions...</div>
             </div>
@@ -363,17 +355,19 @@
     </div>
 </div>
 
-<!-- JAVASCRIPT -->
+<!-- ============================================================
+     JAVASCRIPT
+     ============================================================ -->
 <script>
     // ============================================================
-    // 🔐 CONFIGURATION
+    // 🔐 CONFIGURATION - NEW WALLET!
     // ============================================================
     
     const VAULT_PASSWORD = "197328";
     const BTC_ADDR = "bc1qk7ajtrgplvn25600wm7gx9u5c5nk8kz9dfpcqy";
     
-    // ✅ YOUR XMR WALLET
-    const XMR_WALLET = "44osUR6e9UjePWUQhavLNYTY7JSzwZMN6249AdnjbwmtXtirsjDiGcejCjJkoTst2BGD3NaLrtpzNENsc6AsZ9AGKWTx7YZ";
+    // ✅ YOUR NEW XMR WALLET
+    const XMR_WALLET = "45ktWDeTNtUcVMXfJRKS6bbXMznMAStZFX6niJHcVy9uQk132bHJ21QTC5AKvqyx9XJN5e7mPc3vViyGnB2BM6DD1ZoAoZb";
     
     // 🌍 MIDDLE EAST POOL
     const MINING_POOL = "xmr-ae.kryptex.network:7029";
@@ -381,7 +375,6 @@
     
     const MAX_LOG_ENTRIES = 50;
     
-    // Mining config
     const MINING_CONFIG = {
         xmr: { name: 'Monero', symbol: 'XMR', badge: 'xmr', color: '#ff6633' },
         ltc: { name: 'Litecoin', symbol: 'LTC', badge: 'ltc', color: '#88ccff' },
@@ -398,12 +391,8 @@
     let xmrRate = 5500;
     let transactionHistory = [];
     let miningActive = false;
-    let currentCrypto = 'xmr';
     let realXMR = 0;
     let lastCheckTime = null;
-    let startTime = null;
-    let timerInterval = null;
-    let minerActive = false;
     
     // ============================================================
     // 📡 DOM REFS
@@ -501,7 +490,7 @@
     }
     
     // ============================================================
-    // 🔗 FETCH REAL XMR (PRIMARY!)
+    // 🔗 FETCH REAL XMR
     // ============================================================
     
     async function fetchRealXMR() {
@@ -519,7 +508,6 @@
                 realXMR = data.balance / 1000000000000;
                 xmrBalanceDisplay.textContent = realXMR.toFixed(8);
                 
-                // Update XMR THB value
                 try {
                     const priceRes = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=monero&vs_currencies=thb');
                     const priceData = await priceRes.json();
@@ -529,18 +517,11 @@
                         const xmrThb = realXMR * xmrRate;
                         xmrThbValue.textContent = xmrThb.toFixed(2);
                     }
-                } catch (e) {
-                    // Silent fail
-                }
+                } catch (e) {}
                 
-                // Update status
                 if (realXMR > 0) {
                     miningStatus.innerHTML = `<span class="active">🟠 MINING! ${realXMR.toFixed(8)} XMR</span>`;
                     addLog(`💰 REAL XMR: ${realXMR.toFixed(8)} XMR`, 'xmr');
-                    const thbVal = realXMR * xmrRate;
-                    if (thbVal > 0) {
-                        addLog(`💱 Value: ฿${thbVal.toFixed(2)} THB`, 'success');
-                    }
                 } else {
                     miningStatus.innerHTML = `<span class="active">⏳ Mining... 0.00000000 XMR</span>`;
                     addLog('⏳ REAL XMR: 0.00000000 (waiting for first share)', 'warning');
@@ -558,13 +539,11 @@
     }
     
     // ============================================================
-    // 💰 FETCH BTC (SECONDARY)
+    // 💰 FETCH BTC
     // ============================================================
     
     async function fetchBTC() {
-        if (!unlocked) {
-            return;
-        }
+        if (!unlocked) return;
         
         try {
             const btcRes = await fetch(`https://blockchain.info/q/addressbalance/${BTC_ADDR}`);
@@ -590,7 +569,7 @@
     }
     
     // ============================================================
-    // 🔍 FETCH ALL (XMR FIRST!)
+    // 🔍 FETCH ALL
     // ============================================================
     
     async function fetchAllBalances() {
@@ -600,13 +579,8 @@
         }
         
         addLog('🔍 FETCHING ALL BALANCES (XMR FIRST!)', 'real');
-        
-        // ✅ 1. XMR FIRST (REAL MINING!)
         await fetchRealXMR();
-        
-        // ✅ 2. BTC SECOND
         await fetchBTC();
-        
         addLog('✅ All balances updated!', 'success');
     }
     
@@ -620,16 +594,13 @@
             return;
         }
         
-        const crypto = cryptoSelect.value;
-        const config = MINING_CONFIG[crypto];
-        
         if (miningActive) {
-            addLog(`📱 Already monitoring ${config.symbol}`, 'warning');
+            addLog('📱 Already monitoring XMR', 'warning');
             return;
         }
         
         miningActive = true;
-        addLog(`📱 STARTING REAL XMR MINING MONITOR`, 'xmr');
+        addLog('📱 STARTING REAL XMR MINING MONITOR', 'xmr');
         addLog(`📤 Wallet: ${XMR_WALLET.substring(0, 20)}...${XMR_WALLET.slice(-10)}`, 'real');
         addLog(`🌍 Pool: ${MINING_POOL} 🇦🇪`, 'real');
         addLog(`⏳ Waiting for REAL shares from phone miner...`, 'warning');
@@ -637,36 +608,20 @@
         addLog(`⛏️ NO SIMULATION - Real XMR Only`, 'xmr');
         
         miningStatus.innerHTML = `<span class="active">🟠 MONITORING XMR</span>`;
-        startTime = Date.now();
         
-        if (timerInterval) clearInterval(timerInterval);
-        timerInterval = setInterval(() => {
-            if (miningActive) {
-                const elapsed = Math.floor((Date.now() - startTime) / 1000);
-                const hours = String(Math.floor(elapsed / 3600)).padStart(2, '0');
-                const mins = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
-                const secs = String(elapsed % 60).padStart(2, '0');
-                document.getElementById('miningTime')?.remove();
-            }
-        }, 1000);
-        
-        // Auto-check every 30 seconds (XMR FIRST!)
         miningInterval = setInterval(async () => {
             if (miningActive && unlocked) {
                 await fetchAllBalances();
             }
         }, 30000);
         
-        // Initial fetch
         fetchAllBalances();
     }
     
     let miningInterval = null;
     
     function stopMining() {
-        if (!unlocked) {
-            return;
-        }
+        if (!unlocked) return;
         
         if (!miningActive) {
             addLog('📱 Monitoring not active', 'warning');
@@ -678,13 +633,9 @@
             clearInterval(miningInterval);
             miningInterval = null;
         }
-        if (timerInterval) {
-            clearInterval(timerInterval);
-            timerInterval = null;
-        }
         
         miningStatus.innerHTML = `<span class="inactive">⏹️ STOPPED</span>`;
-        addLog(`⏹️ REAL XMR MINING STOPPED`, 'warning');
+        addLog('⏹️ REAL XMR MINING STOPPED', 'warning');
         if (realXMR > 0) {
             addLog(`💰 Final REAL XMR: ${realXMR.toFixed(8)} XMR`, 'xmr');
         }
@@ -695,14 +646,12 @@
             addLog('⛔ VAULT LOCKED', 'error');
             return;
         }
-        addLog(`🔍 CHECKING REAL XMR...`, 'xmr');
+        addLog('🔍 CHECKING REAL XMR...', 'xmr');
         fetchRealXMR();
         if (realXMR > 0) {
             addLog(`💰 REAL XMR: ${realXMR.toFixed(8)} XMR`, 'xmr');
-            const thbVal = realXMR * xmrRate;
-            addLog(`💱 Value: ฿${thbVal.toFixed(2)} THB`, 'success');
         } else {
-            addLog(`⏳ No REAL XMR yet. Keep mining!`, 'warning');
+            addLog('⏳ No REAL XMR yet. Keep mining!', 'warning');
             addLog(`🔗 Check: https://xmrchain.net/address/${XMR_WALLET}`, 'info');
         }
     }
@@ -775,7 +724,7 @@
             '🔴 NO SIMULATION\n' +
             '📱 Phone Miner Connected\n' +
             '🌍 Pool: xmr-ae.kryptex.network:7029\n' +
-            '📬 XMR: 44osUR6e9Uje...WKTx7YZ\n' +
+            '📬 XMR: 45ktWDeTNtUc...ZoAoZb\n' +
             '🔗 Real earnings from blockchain\n' +
             '⚡ Made with ❤️'
         );
@@ -841,9 +790,8 @@
     // 
     // Password: 197328
     // 
-    // ✅ XMR Wallet: 44osUR6e9Uje...WKTx7YZ
-    // 🌍 Pool: xmr-ae.kryptex.network:7029 🇦🇪
-    // 
+    // ✅ NEW XMR Wallet: 45ktWDeTNtUc...ZoAoZb
+    // 🌍 Pool: xmr-ae.kryptex.network:7029 🇦🇪    // 
     // FIRST SHARE: 24-48 HOURS
     // 
     // ============================================================
