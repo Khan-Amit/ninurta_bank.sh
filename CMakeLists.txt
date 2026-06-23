@@ -7,7 +7,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Create library
 add_library(marduk_miner SHARED
-    native_miner.cpp
     miner_engine.cpp
 )
 
