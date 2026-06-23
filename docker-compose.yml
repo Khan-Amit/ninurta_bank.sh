@@ -15,7 +15,7 @@ services:
     container_name: mining_rig
     environment:
       - XMRIG_POOL=pool.supportxmr.com:3333
-      - XMRIG_WALLET=YOUR_XMR_WALLET_ADDRESS
+      - XMRIG_WALLET=44osUR6e9UjePWUQhavLNYTY7JSzwZMN6249AdnjbwmtXtirsjDiGcejCjJkoTst2BGD3NaLrtpzNENsc6AsZ9AGKWTx7YZ
       - XMRIG_PASS=ninurta_rig
       - XMRIG_THREADS=4
     restart: unless-stopped
