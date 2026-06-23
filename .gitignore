@@ -1,23 +1,332 @@
-### AL ###
-#Template for AL projects for Dynamics 365 Business Central
-#launch.json folder
+# ============================================================
+# 🧹 GITIGNORE - Marduk Project & AL (Business Central)
+# ============================================================
+# 
+# This file tells Git which files/folders to ignore
+# 
+# 🔧 WHAT TO CHANGE:
+#   1. Add your custom paths at the bottom
+#   2. Uncomment sections if needed
+# 
+# ============================================================
+
+# ============================================================
+# 📁 AL / Dynamics 365 Business Central
+# ============================================================
+
+# VS Code workspace settings
 .vscode/
-#Cache folder
+!.vscode/extensions.json
+!.vscode/launch.json.example
+
+# AL cache and packages
 .alcache/
-#Symbols folder
 .alpackages/
-#Snapshots folder
+.packages/
+.packagecache/
+
+# Snapshots (debug data)
 .snapshots/
-#Testing Output folder
+
+# Test output
 .output/
-#Extension App-file
+.testresults/
+
+# Generated app files
 *.app
-#Rapid Application Development File
+*.appx
+*.appxupload
+
+# Rapid Application Development
 rad.json
-#Translation Base-file
+*.rad.json
+
+# Translation files
 *.g.xlf
-#License-files
+*.xlf
+*.lcl
+
+# License files
 *.bclicense
 *.flf
-#Test results file
+*.license
+
+# Test results
 TestResults.xml
+*.trx
+*.coverage
+
+# ============================================================
+# 🔧 MARDUK PROJECT SPECIFIC
+# ============================================================
+
+# Logs
+*.log
+*.log.*
+logs/
+*.out
+*.err
+
+# Marduk data directories
+.marduk/
+.marduk_atm/
+!.marduk/README.md
+!.marduk_atm/README.md
+
+# Config files (keep example)
+*.conf
+*.conf.local
+*.config
+!config.example.conf
+
+# Generated bridge files
+latest_bridge.txt
+latest_transport.txt
+slices.tmp
+
+# Transaction history (keep for reference)
+# Remove these if you want to commit history
+# *.log
+
+# ============================================================
+# 🐍 Python / General Programming
+# ============================================================
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+*.pyproj
+*.pyi
+
+# Node.js / JavaScript
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+.eslintcache
+*.tsbuildinfo
+
+# ============================================================
+# 💻 OS / IDE Specific
+# ============================================================
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.icloud
+*/.DS_Store
+*/Thumbs.db
+
+# Linux
+*~
+*.swp
+*.swo
+*.swn
+*.bak
+*.tmp
+*.temp
+.directory
+.directory-*
+
+# ============================================================
+# 🛠️ IDE / Editor Specific
+# ============================================================
+
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# IntelliJ / WebStorm / PHPStorm
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+.idea_modules/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+*.sublime-*
+*.stTheme
+
+# Vim
+*.swp
+*.swo
+*~
+.*.swp
+.*.swo
+
+# Emacs
+*~
+\#*\#
+.\#*
+.elc
+
+# ============================================================
+# 🗄️ Database / Backup
+# ============================================================
+
+# SQLite
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# PostgreSQL
+*.pgdump
+*.sql
+!schema.sql
+
+# Backups
+*.backup
+*.bak
+*.old
+*.orig
+*.rej
+*.save
+*.tmp
+*~
+
+# Archives
+*.zip
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+*.iso
+*.dmg
+*.pkg
+
+# ============================================================
+# 🔐 Security / Secrets
+# ============================================================
+
+# Secrets and credentials
+*.pem
+*.key
+*.crt
+*.csr
+*.pfx
+*.p12
+*.cert
+*.secret
+*.secrets
+.env
+.env.*
+!.env.example
+secrets/
+credentials/
+keys/
+*.pwd
+*.pass
+*.password
+
+# API keys (if stored in files)
+*_api_key.txt
+*_secret.txt
+*.apikey
+
+# ============================================================
+# 📦 Dependencies / Builds
+# ============================================================
+
+# Build outputs
+build/
+dist/
+bin/
+obj/
+lib/
+out/
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.dll
+*.so
+*.dylib
+*.exe
+
+# ============================================================
+# 📊 Test / Coverage
+# ============================================================
+
+# Coverage reports
+coverage/
+.nyc_output/
+*.lcov
+*.lcov.info
+
+# Test artifacts
+*.test
+*.tests
+*.spec
+
+# ============================================================
+# 📁 Custom User Directories (Add your own)
+# ============================================================
+
+# Add any project-specific paths here
+# Example:
+# my_custom_data/
+# temp_export/
+# *.custom
+
+# ============================================================
+# 📝 NOTES
+# ============================================================
+# 
+# To check what Git will ignore:
+#   git check-ignore -v <filename>
+# 
+# To stop ignoring a file:
+#   git add -f <filename>
+# 
+# To see all ignored files:
+#   git status --ignored
+# 
+# ============================================================
