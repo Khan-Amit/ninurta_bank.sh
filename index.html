@@ -270,14 +270,20 @@
                 <span class="rate">📊 1 BTC = ฿ <span id="btcRate">1,800,000</span></span>
             </div>
 
-            <!-- MINING STATUS -->
+            <!-- MINING SELECTOR — RESTORED! -->
             <div class="mining-selector">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span style="color:#ffcc00; font-size:0.8rem;">⛏️ MINING STATUS</span>
+                    <span style="color:#ffcc00; font-size:0.8rem;">⛏️ MINING POOLS</span>
                     <span id="miningStatus" class="mining-status">
                         <span class="inactive">⏹️ STOPPED</span>
                     </span>
                 </div>
+                <select id="cryptoSelect">
+                    <option value="xmr">🟠 Monero (XMR) - pool.supportxmr.com</option>
+                    <option value="xmr_ae">🟠 Monero (XMR) - xmr-ae.kryptex.network</option>
+                    <option value="btc">🟡 Bitcoin (BTC) - stratum.antpool.com</option>
+                    <option value="btc_viabtc">🟡 Bitcoin (BTC) - viabtc.com</option>
+                </select>
                 <div style="font-size:0.8rem; color:#8da0c0; text-align:center; padding:0.5rem 0;">
                     <span id="minerDetail">⏳ Waiting for shares...</span>
                 </div>
@@ -330,7 +336,7 @@
 </div>
 
 <!-- ============================================================
-     JAVASCRIPT — FIXED!
+     JAVASCRIPT — FULL FIXED!
      ============================================================ -->
 <script>
     // ============================================================
@@ -340,7 +346,13 @@
     const VAULT_PASSWORD = "197328";
     const XMR_WALLET = "45ktWDeTNtUcVMXfJRKS6bbXMznMAStZFX6niJHcVy9uQk132bHJ21QTC5AKvqyx9XJN5e7mPc3vViyGnB2BM6DD1ZoAoZb";
     const BTC_WALLET = "bc1qk7ajtrgplvn25600wm7gx9u5c5nk8kz9dfpcqy";
-    const POOL = "pool.supportxmr.com:3333";
+
+    const POOLS = {
+        xmr:       { name: 'Monero', symbol: 'XMR', url: 'pool.supportxmr.com:3333',       api: 'https://xmrchain.net/api/address/', wallet: XMR_WALLET },
+        xmr_ae:    { name: 'Monero (Middle East)', symbol: 'XMR', url: 'xmr-ae.kryptex.network:7029', api: 'https://xmrchain.net/api/address/', wallet: XMR_WALLET },
+        btc:       { name: 'Bitcoin', symbol: 'BTC', url: 'stratum.antpool.com:3333',       api: 'https://blockchain.info/q/addressbalance/', wallet: BTC_WALLET },
+        btc_viabtc:{ name: 'Bitcoin (ViaBTC)', symbol: 'BTC', url: 'viabtc.com:3333',        api: 'https://blockchain.info/q/addressbalance/', wallet: BTC_WALLET }
+    };
 
     const MAX_LOG_ENTRIES = 50;
 
@@ -357,7 +369,7 @@
     let realXMR = 0;
     let realBTC = 0;
     let miningInterval = null;
-    let minerActive = true;
+    let currentPool = 'xmr';
 
     // ============================================================
     // 📡 DOM REFS
@@ -379,6 +391,7 @@
         xmrThbValue: $('xmrThbValue'),
         xmrRate: $('xmrRate'),
         terminal: $('terminal'),
+        cryptoSelect: $('cryptoSelect'),
         miningStatus: $('miningStatus'),
         minerDetail: $('minerDetail'),
         poolStatus: $('poolStatus'),
@@ -431,6 +444,7 @@
             addLog(`📬 XMR Wallet: ${XMR_WALLET.substring(0, 20)}...${XMR_WALLET.slice(-10)}`, 'xmr');
             addLog(`₿ BTC Wallet: ${BTC_WALLET.substring(0, 15)}...${BTC_WALLET.slice(-10)}`, 'btc');
             addLog(`⛏️ REAL MINING - BTC + XMR`, 'real');
+            DOM.poolStatus.textContent = POOLS[DOM.cryptoSelect.value].url;
             fetchAllBalances();
             return true;
         } else {
@@ -470,7 +484,7 @@
     }
 
     // ============================================================
-    // 🔗 FETCH REAL XMR — FIXED!
+    // 🔗 FETCH REAL XMR
     // ============================================================
 
     async function fetchRealXMR() {
@@ -499,7 +513,6 @@
                     }
                 } catch (e) {}
 
-                // 🔥 FIXED: SHOW REAL STATUS
                 if (realXMR > 0) {
                     DOM.miningStatus.innerHTML = `<span class="active">🟠 XMR: ${realXMR.toFixed(8)}</span>`;
                     DOM.minerDetail.textContent = `✅ Mining active — ${realXMR.toFixed(8)} XMR earned`;
@@ -566,7 +579,7 @@
     }
 
     // ============================================================
-    // 🔍 FETCH ALL — FIXED!
+    // 🔍 FETCH ALL
     // ============================================================
 
     async function fetchAllBalances() {
@@ -579,7 +592,6 @@
         await fetchRealXMR();
         await fetchRealBTC();
 
-        // 🔥 Show miner status
         if (realXMR === 0) {
             DOM.miningStatus.innerHTML = `<span class="processing">⏳ PROCESSING...</span>`;
             DOM.minerDetail.textContent = `⏳ Miner active — waiting for first share (24-48 hrs)`;
@@ -590,6 +602,15 @@
     // ============================================================
     // ⛏️ MINING FUNCTIONS
     // ============================================================
+
+    function updateMiningUI() {
+        const selected = DOM.cryptoSelect.value;
+        const pool = POOLS[selected];
+        if (pool) {
+            DOM.poolStatus.textContent = pool.url;
+            currentPool = selected;
+        }
+    }
 
     function startMining() {
         if (!unlocked) {
@@ -602,14 +623,15 @@
             return;
         }
 
-        miningActive = true;
-        minerActive = true;
+        const selected = DOM.cryptoSelect.value;
+        const pool = POOLS[selected];
 
-        addLog('📱 STARTING REAL MINING MONITOR', 'real');
-        addLog(`📤 Wallet: ${XMR_WALLET.substring(0, 20)}...${XMR_WALLET.slice(-10)}`, 'real');
-        addLog(`🔗 Pool: ${POOL}`, 'real');
+        miningActive = true;
+        addLog(`📱 STARTING REAL MINING MONITOR: ${pool.name}`, 'real');
+        addLog(`📤 Wallet: ${pool.wallet.substring(0, 20)}...${pool.wallet.slice(-10)}`, 'real');
+        addLog(`🔗 Pool: ${pool.url}`, 'real');
         addLog(`⏳ Miner active — waiting for first share (24-48 hrs)`, 'processing');
-        addLog(`⛏️ NO SIMULATION - Real XMR Only`, 'xmr');
+        addLog(`⛏️ NO SIMULATION - Real ${pool.symbol} Only`, 'real');
 
         DOM.miningStatus.innerHTML = `<span class="processing">⏳ PROCESSING...</span>`;
         DOM.minerDetail.textContent = `⏳ Miner active — waiting for first share (24-48 hrs)`;
@@ -632,7 +654,6 @@
         }
 
         miningActive = false;
-        minerActive = false;
         if (miningInterval) {
             clearInterval(miningInterval);
             miningInterval = null;
@@ -745,12 +766,17 @@
     DOM.checkEarningsBtn.addEventListener('click', checkEarnings);
     DOM.fetchAllBtn.addEventListener('click', fetchAllBalances);
 
+    DOM.cryptoSelect.addEventListener('change', () => {
+        updateMiningUI();
+        addLog(`🔄 Switched to ${POOLS[DOM.cryptoSelect.value].name}`, 'info');
+    });
+
     // ============================================================
     // 🚀 AUTO-START
     // ============================================================
 
     DOM.passwordInput.focus();
-    DOM.poolStatus.textContent = POOL;
+    updateMiningUI();
 
     setInterval(() => {
         if (unlocked) {
@@ -766,6 +792,12 @@
     // 
     // ✅ XMR Wallet: 45ktWDeTNtUc...ZoAoZb
     // ✅ BTC Wallet: bc1qk7aj...dfpcqy
+    // 
+    // Pools:
+    //   - pool.supportxmr.com:3333
+    //   - xmr-ae.kryptex.network:7029
+    //   - stratum.antpool.com:3333
+    //   - viabtc.com:3333
     // 
     // ============================================================
 </script>
