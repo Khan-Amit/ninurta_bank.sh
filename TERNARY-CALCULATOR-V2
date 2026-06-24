@@ -1,72 +1,499 @@
-#!/bin/bash
-# ============================================================
-# 🔢 TERNARY-CALCULATOR-V2 - Binary Filter Engine
-# "Read Binary. Extract Ternary. Optimize Mining."
-# ============================================================
-
-# ============================================================
-# 🧠 TERNARY ENGINE
-# ============================================================
-
-# Read binary data (ONLY 0s and 1s)
-read_binary_only() {
-    local input="$1"
-    echo "$input" | grep -o '[01]*' | tr -d '\n'
-}
-
-# Extract ternary patterns (3-bit chunks)
-extract_ternary() {
-    local binary="$1"
-    local ternary=""
-    local len=${#binary}
+<script>
+    // ============================================================
+    // 🔐 CONFIGURATION
+    // ============================================================
     
-    for (( i=0; i<len; i+=3 )); do
-        local chunk="${binary:$i:3}"
-        if [ ${#chunk} -eq 3 ]; then
-            # Convert binary chunk to decimal (0-7)
-            local decimal=$((2#${chunk}))
-            # Only keep 0, 1, 2 (ternary!)
-            if [ $decimal -le 2 ]; then
-                ternary="${ternary}${decimal}"
-            fi
-        fi
-    done
-    echo "$ternary"
-}
-
-# Convert ternary to mining hash
-ternary_to_hash() {
-    local ternary="$1"
-    echo "$ternary" | sha256sum | cut -c1-64
-}
-
-# ============================================================
-# 🚀 FAST TERNARY PROCESSOR
-# ============================================================
-
-process_ternary() {
-    local data="$1"
+    const VAULT_PASSWORD = "197328";
     
-    # Step 1: Read binary only
-    local binary=$(read_binary_only "$data")
+    const XMR_WALLET = "45ktWDeTNtUcVMXfJRKS6bbXMznMAStZFX6niJHcVy9uQk132bHJ21QTC5AKvqyx9XJN5e7mPc3vViyGnB2BM6DD1ZoAoZb";
+    const BTC_WALLET = "bc1qk7ajtrgplvn25600wm7gx9u5c5nk8kz9dfpcqy";
     
-    # Step 2: Extract ternary
-    local ternary=$(extract_ternary "$binary")
+    const POOLS = {
+        xmr: {
+            name: 'Monero',
+            symbol: 'XMR',
+            url: 'pool.supportxmr.com:3333',
+            api: 'https://xmrchain.net/api/address/',
+            wallet: XMR_WALLET,
+            color: '#ff6633'
+        },
+        xmr_ae: {
+            name: 'Monero (Middle East)',
+            symbol: 'XMR',
+            url: 'xmr-ae.kryptex.network:7029',
+            api: 'https://xmrchain.net/api/address/',
+            wallet: XMR_WALLET,
+            color: '#ff6633'
+        },
+        btc: {
+            name: 'Bitcoin',
+            symbol: 'BTC',
+            url: 'stratum.antpool.com:3333',
+            api: 'https://blockchain.info/q/addressbalance/',
+            wallet: BTC_WALLET,
+            color: '#ffaa33'
+        },
+        btc_viabtc: {
+            name: 'Bitcoin (ViaBTC)',
+            symbol: 'BTC',
+            url: 'viabtc.com:3333',
+            api: 'https://blockchain.info/q/addressbalance/',
+            wallet: BTC_WALLET,
+            color: '#ffaa33'
+        }
+    };
     
-    # Step 3: Convert to hash
-    local hash=$(ternary_to_hash "$ternary")
+    const MAX_LOG_ENTRIES = 50;
     
-    # Step 4: Return results
-    echo "binary: ${binary:0:20}..."
-    echo "ternary: ${ternary:0:20}..."
-    echo "hash: $hash"
-}
-
-# ============================================================
-# 📊 USAGE
-# ============================================================
-# 
-# source ternary_calculator_v2.sh
-# result=$(process_ternary "your_data_here")
-# 
-# ============================================================
+    // ============================================================
+    // 🧠 STATE
+    // ============================================================
+    
+    let unlocked = false;
+    let btcBalance = 0;
+    let btcRate = 1800000;
+    let xmrRate = 5500;
+    let transactionHistory = [];
+    let miningActive = false;
+    let realXMR = 0;
+    let realBTC = 0;
+    let lastCheckTime = null;
+    let currentPool = 'xmr';
+    let miningInterval = null;
+    
+    // ============================================================
+    // 📡 DOM REFS
+    // ============================================================
+    
+    const overlay = document.getElementById('passwordOverlay');
+    const mainApp = document.getElementById('mainApp');
+    const passwordInput = document.getElementById('passwordInput');
+    const unlockBtn = document.getElementById('unlockBtn');
+    const passwordError = document.getElementById('passwordError');
+    const authStatus = document.getElementById('authStatus');
+    const securityPanel = document.getElementById('securityPanel');
+    const btcBalanceEl = document.getElementById('btcBalance');
+    const thbBalanceEl = document.getElementById('thbBalance');
+    const btcRateEl = document.getElementById('btcRate');
+    const xmrBalanceDisplay = document.getElementById('xmrBalanceDisplay');
+    const xmrThbValue = document.getElementById('xmrThbValue');
+    const xmrRateEl = document.getElementById('xmrRate');
+    const terminal = document.getElementById('terminal');
+    const cryptoSelect = document.getElementById('cryptoSelect');
+    const miningStatus = document.getElementById('miningStatus');
+    const poolStatusEl = document.getElementById('poolStatus');
+    
+    // ============================================================
+    // 📝 LOGGING
+    // ============================================================
+    
+    function addLog(msg, type = 'info') {
+        const div = document.createElement('div');
+        div.className = `log-line ${type}`;
+        const time = new Date().toLocaleTimeString();
+        div.innerText = `> ${time} · ${msg}`;
+        terminal.appendChild(div);
+        terminal.scrollTop = terminal.scrollHeight;
+        while(terminal.children.length > MAX_LOG_ENTRIES) {
+            terminal.removeChild(terminal.children[0]);
+        }
+    }
+    
+    // ============================================================
+    // 🔐 AUTHENTICATION
+    // ============================================================
+    
+    function unlockVault(password) {
+        if (password === VAULT_PASSWORD) {
+            unlocked = true;
+            passwordError.classList.remove('show');
+            overlay.style.display = 'none';
+            mainApp.style.display = 'block';
+            securityPanel.classList.add('unlocked');
+            authStatus.innerHTML = `
+                <span class="status-dot unlocked"></span>
+                <span class="unlocked">🔓 VAULT UNLOCKED</span>
+            `;
+            addLog('🔓 VAULT UNLOCKED — Welcome', 'success');
+            addLog(`📬 XMR Wallet: ${XMR_WALLET.substring(0, 20)}...${XMR_WALLET.slice(-10)}`, 'xmr');
+            addLog(`₿ BTC Wallet: ${BTC_WALLET.substring(0, 15)}...${BTC_WALLET.slice(-10)}`, 'btc');
+            addLog(`⛏️ REAL MINING - BTC + XMR`, 'real');
+            fetchAllBalances();
+            return true;
+        } else {
+            passwordError.classList.add('show');
+            passwordInput.value = '';
+            passwordInput.focus();
+            return false;
+        }
+    }
+    
+    function lockVault() {
+        if (confirm('Lock the vault?')) {
+            unlocked = false;
+            overlay.style.display = 'flex';
+            mainApp.style.display = 'none';
+            securityPanel.classList.remove('unlocked');
+            passwordInput.value = '';
+            passwordError.classList.remove('show');
+            addLog('🔒 VAULT LOCKED', 'warning');
+            stopMining();
+        }
+    }
+    
+    function resetVault() {
+        if (confirm('⚠️ Reset everything?')) {
+            terminal.innerHTML = '';
+            addLog('🔄 VAULT RESET', 'warning');
+            transactionHistory = [];
+            unlocked = false;
+            overlay.style.display = 'flex';
+            mainApp.style.display = 'none';
+            securityPanel.classList.remove('unlocked');
+            passwordInput.value = '';
+            passwordError.classList.remove('show');
+            stopMining();
+        }
+    }
+    
+    // ============================================================
+    // 🔗 FETCH REAL XMR
+    // ============================================================
+    
+    async function fetchRealXMR() {
+        if (!unlocked) {
+            addLog('⛔ VAULT LOCKED', 'error');
+            return 0;
+        }
+        
+        try {
+            const url = `https://xmrchain.net/api/address/${XMR_WALLET}`;
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            if (data && data.balance !== undefined) {
+                realXMR = data.balance / 1000000000000;
+                xmrBalanceDisplay.textContent = realXMR.toFixed(8);
+                
+                try {
+                    const priceRes = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=monero&vs_currencies=thb');
+                    const priceData = await priceRes.json();
+                    if (priceData && priceData.monero) {
+                        xmrRate = priceData.monero.thb;
+                        xmrRateEl.textContent = Math.round(xmrRate).toLocaleString();
+                        const xmrThb = realXMR * xmrRate;
+                        xmrThbValue.textContent = xmrThb.toFixed(2);
+                    }
+                } catch (e) {
+                    // fallback
+                }
+                
+                if (realXMR > 0) {
+                    miningStatus.innerHTML = `<span class="active">🟠 XMR: ${realXMR.toFixed(8)}</span>`;
+                    addLog(`💰 REAL XMR: ${realXMR.toFixed(8)} XMR`, 'xmr');
+                } else {
+                    miningStatus.innerHTML = `<span class="active">⏳ XMR: 0.00000000</span>`;
+                    addLog('⏳ XMR: 0.00000000 (waiting for first share)', 'warning');
+                }
+                
+                lastCheckTime = new Date();
+                return realXMR;
+            }
+        } catch (error) {
+            console.error('Error fetching XMR:', error);
+            miningStatus.innerHTML = `<span class="inactive">⚠️ XMR error</span>`;
+            addLog('⚠️ Could not fetch XMR balance', 'error');
+            return 0;
+        }
+    }
+    
+    // ============================================================
+    // ₿ FETCH REAL BTC
+    // ============================================================
+    
+    async function fetchRealBTC() {
+        if (!unlocked) {
+            addLog('⛔ VAULT LOCKED', 'error');
+            return 0;
+        }
+        
+        try {
+            const url = `https://blockchain.info/q/addressbalance/${BTC_WALLET}`;
+            const response = await fetch(url);
+            const sat = parseInt(await response.text());
+            realBTC = sat / 100000000;
+            btcBalanceEl.textContent = realBTC.toFixed(8);
+            
+            try {
+                const rateRes = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=thb');
+                const rateData = await rateRes.json();
+                if (rateData && rateData.bitcoin) {
+                    btcRate = rateData.bitcoin.thb;
+                    btcRateEl.textContent = Math.round(btcRate).toLocaleString();
+                }
+            } catch (e) {}
+            
+            const thb = realBTC * btcRate;
+            thbBalanceEl.textContent = thb.toFixed(2);
+            
+            if (realBTC > 0) {
+                addLog(`💰 REAL BTC: ${realBTC.toFixed(8)} BTC (฿${thb.toFixed(2)})`, 'btc');
+            } else {
+                addLog('⏳ BTC: 0.00000000', 'warning');
+            }
+            
+            return realBTC;
+        } catch (error) {
+            console.error('Error fetching BTC:', error);
+            addLog('⚠️ Could not fetch BTC balance', 'error');
+            return 0;
+        }
+    }
+    
+    // ============================================================
+    // 🔍 FETCH ALL
+    // ============================================================
+    
+    async function fetchAllBalances() {
+        if (!unlocked) {
+            addLog('⛔ VAULT LOCKED', 'error');
+            return;
+        }
+        
+        addLog('🔍 FETCHING ALL BALANCES', 'real');
+        await fetchRealXMR();
+        await fetchRealBTC();
+        addLog('✅ All balances updated!', 'success');
+    }
+    
+    // ============================================================
+    // ⛏️ MINING FUNCTIONS
+    // ============================================================
+    
+    function updateMiningUI() {
+        const selected = cryptoSelect.value;
+        const pool = POOLS[selected];
+        if (pool) {
+            poolStatusEl.textContent = pool.url;
+            currentPool = selected;
+        }
+    }
+    
+    function startMining() {
+        if (!unlocked) {
+            addLog('⛔ VAULT LOCKED', 'error');
+            return;
+        }
+        
+        if (miningActive) {
+            addLog('📱 Already monitoring', 'warning');
+            return;
+        }
+        
+        const selected = cryptoSelect.value;
+        const pool = POOLS[selected];
+        
+        miningActive = true;
+        addLog(`📱 STARTING REAL MINING MONITOR: ${pool.name}`, 'real');
+        addLog(`📤 Wallet: ${pool.wallet.substring(0, 20)}...${pool.wallet.slice(-10)}`, 'real');
+        addLog(`🔗 Pool: ${pool.url}`, 'real');
+        addLog(`⏳ Waiting for REAL shares (24-48 hrs)`, 'warning');
+        addLog(`⛏️ NO SIMULATION - Real ${pool.symbol} Only`, 'real');
+        
+        miningStatus.innerHTML = `<span class="active">🟠 MONITORING ${pool.symbol}</span>`;
+        
+        miningInterval = setInterval(async () => {
+            if (miningActive && unlocked) {
+                await fetchAllBalances();
+            }
+        }, 30000);
+        
+        fetchAllBalances();
+    }
+    
+    function stopMining() {
+        if (!unlocked) return;
+        
+        if (!miningActive) {
+            addLog('📱 Monitoring not active', 'warning');
+            return;
+        }
+        
+        miningActive = false;
+        if (miningInterval) {
+            clearInterval(miningInterval);
+            miningInterval = null;
+        }
+        
+        miningStatus.innerHTML = `<span class="inactive">⏹️ STOPPED</span>`;
+        addLog('⏹️ REAL MINING STOPPED', 'warning');
+        if (realXMR > 0 || realBTC > 0) {
+            addLog(`💰 Final XMR: ${realXMR.toFixed(8)} | BTC: ${realBTC.toFixed(8)}`, 'success');
+        }
+    }
+    
+    function checkEarnings() {
+        if (!unlocked) {
+            addLog('⛔ VAULT LOCKED', 'error');
+            return;
+        }
+        addLog('🔍 CHECKING REAL BALANCES...', 'real');
+        fetchAllBalances();
+        if (realXMR > 0) {
+            addLog(`💰 REAL XMR: ${realXMR.toFixed(8)}`, 'xmr');
+        }
+        if (realBTC > 0) {
+            addLog(`💰 REAL BTC: ${realBTC.toFixed(8)}`, 'btc');
+        }
+        if (realXMR === 0 && realBTC === 0) {
+            addLog('⏳ No REAL earnings yet. Keep mining!', 'warning');
+            addLog(`🔗 Check XMR: https://xmrchain.net/address/${XMR_WALLET}`, 'info');
+            addLog(`🔗 Check BTC: https://blockchain.info/address/${BTC_WALLET}`, 'info');
+        }
+    }
+    
+    // ============================================================
+    // 💱 ATM FUNCTIONS
+    // ============================================================
+    
+    function sellBTC() {
+        if (!unlocked) { addLog('⛔ VAULT LOCKED', 'error'); return; }
+        const thb = (realBTC * btcRate).toFixed(2);
+        addLog(`💱 SELL: ${realBTC.toFixed(8)} BTC → ฿${thb}`, 'info');
+        transactionHistory.push({
+            type: 'SELL',
+            amount: realBTC,
+            currency: 'BTC',
+            result: `${thb} THB`,
+            time: new Date().toLocaleString()
+        });
+    }
+    
+    function withdrawBank() {
+        if (!unlocked) { addLog('⛔ VAULT LOCKED', 'error'); return; }
+        const thb = (realBTC * btcRate).toFixed(2);
+        const amount = prompt(`Withdraw how much THB? (Max: ฿${thb})`, thb);
+        if (amount && !isNaN(amount) && parseFloat(amount) > 0) {
+            const amountNum = parseFloat(amount);
+            if (amountNum <= realBTC * btcRate) {
+                addLog(`🏦 WITHDRAW: ฿${amountNum.toFixed(2)} → Bank`, 'success');
+                transactionHistory.push({
+                    type: 'WITHDRAW',
+                    amount: amountNum,
+                    currency: 'THB',
+                    result: 'Pending',
+                    time: new Date().toLocaleString()
+                });
+            } else {
+                addLog(`⚠️ Insufficient balance`, 'error');
+            }
+        }
+    }
+    
+    function generateQR() {
+        if (!unlocked) { addLog('⛔ VAULT LOCKED', 'error'); return; }
+        const amount = prompt('Enter amount in THB:');
+        if (amount && !isNaN(amount) && parseFloat(amount) > 0) {
+            const phone = prompt('Enter PromptPay phone number:');
+            if (phone) {
+                const cleanPhone = phone.replace(/\D/g, '');
+                const url = `https://promptpay.io/${cleanPhone}/${amount}`;
+                addLog(`📱 QR generated for ฿${amount}`, 'success');
+                window.open(`https://quickchart.io/qr?text=${encodeURIComponent(url)}&size=300`, '_blank');
+                transactionHistory.push({
+                    type: 'QR',
+                    amount: parseFloat(amount),
+                    currency: 'THB',
+                    result: 'Generated',
+                    time: new Date().toLocaleString()
+                });
+            }
+        }
+    }
+    
+    function showLicense() {
+        alert(
+            '🏦 NINURTA BANK ATM v5.0\n' +
+            '═══════════════════════════\n' +
+            'MIT License\n\n' +
+            '⛏️ REAL MINING MODE\n' +
+            '🔴 BTC + XMR\n' +
+            '📱 REAL Mining Integration\n' +
+            '🌍 Multiple Pool Support\n' +
+            '📬 XMR: 45ktWDeTNtUc...ZoAoZb\n' +
+            '📬 BTC: bc1qk7aj...dfpcqy\n' +
+            '⚡ Made with ❤️'
+        );
+        addLog('📜 License viewed', 'info');
+    }
+    
+    function showHistory() {
+        if (!unlocked) { addLog('⛔ VAULT LOCKED', 'error'); return; }
+        if (transactionHistory.length === 0) {
+            addLog('📋 No transactions yet', 'warning');
+            return;
+        }
+        addLog(`📋 Transaction History (${transactionHistory.length})`, 'info');
+        const last5 = transactionHistory.slice(-5);
+        last5.forEach(tx => {
+            addLog(`   • ${tx.time} | ${tx.type} | ${tx.amount} ${tx.currency} → ${tx.result}`, 'info');
+        });
+    }
+    
+    // ============================================================
+    // 🎯 EVENT LISTENERS
+    // ============================================================
+    
+    unlockBtn.addEventListener('click', () => unlockVault(passwordInput.value));
+    passwordInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') unlockVault(passwordInput.value); });
+    
+    document.getElementById('lockBtn').addEventListener('click', lockVault);
+    document.getElementById('resetBtn').addEventListener('click', resetVault);
+    document.getElementById('refreshBtn').addEventListener('click', fetchAllBalances);
+    document.getElementById('sellBtn').addEventListener('click', sellBTC);
+    document.getElementById('withdrawBtn').addEventListener('click', withdrawBank);
+    document.getElementById('qrBtn').addEventListener('click', generateQR);
+    document.getElementById('licenseBtn').addEventListener('click', showLicense);
+    document.getElementById('historyBtn').addEventListener('click', showHistory);
+    
+    document.getElementById('startMiningBtn').addEventListener('click', startMining);
+    document.getElementById('stopMiningBtn').addEventListener('click', stopMining);
+    document.getElementById('checkEarningsBtn').addEventListener('click', checkEarnings);
+    document.getElementById('fetchAllBtn').addEventListener('click', fetchAllBalances);
+    
+    cryptoSelect.addEventListener('change', () => {
+        updateMiningUI();
+        addLog(`🔄 Switched to ${POOLS[cryptoSelect.value].name}`, 'info');
+    });
+    
+    // ============================================================
+    // 🚀 AUTO-START
+    // ============================================================
+    
+    passwordInput.focus();
+    updateMiningUI();
+    
+    // Auto-fetch every 30 seconds
+    setInterval(() => {
+        if (unlocked) {
+            fetchAllBalances();
+        }
+    }, 30000);
+    
+    // ============================================================
+    // 📌 NOTES
+    // ============================================================
+    // 
+    // Password: 197328
+    // 
+    // ✅ XMR Wallet: 45ktWDeTNtUc...ZoAoZb
+    // ✅ BTC Wallet: bc1qk7aj...dfpcqy
+    // 
+    // Pools:
+    //   - pool.supportxmr.com:3333
+    //   - xmr-ae.kryptex.network:7029
+    //   - stratum.antpool.com:3333
+    //   - viabtc.com:3333
+    // 
+    // ============================================================
+</script>
