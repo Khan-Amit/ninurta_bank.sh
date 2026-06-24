@@ -1,112 +1,29 @@
-# ============================================================
-# 🧹 GITIGNORE - Marduk Project & AL (Business Central)
-# ============================================================
-# 
-# This file tells Git which files/folders to ignore
-# 
-# 🔧 WHAT TO CHANGE:
-#   1. Add your custom paths at the bottom
-#   2. Uncomment sections if needed
-# 
-# ============================================================
-
-# ============================================================
-# 📁 AL / Dynamics 365 Business Central
-# ============================================================
-
-# VS Code workspace settings
-.vscode/
-!.vscode/extensions.json
-!.vscode/launch.json.example
-
-# AL cache and packages
-.alcache/
-.alpackages/
-.packages/
-.packagecache/
-
-# Snapshots (debug data)
-.snapshots/
-
-# Test output
-.output/
-.testresults/
-
-# Generated app files
-*.app
-*.appx
-*.appxupload
-
-# Rapid Application Development
-rad.json
-*.rad.json
-
-# Translation files
-*.g.xlf
-*.xlf
-*.lcl
-
-# License files
-*.bclicense
-*.flf
-*.license
-
-# Test results
-TestResults.xml
-*.trx
-*.coverage
-
-# ============================================================
-# ⛏️ MARDUK / MINING PROJECT SPECIFIC
-# ============================================================
-
-# Mining logs and data
+# Marduk System
+.marduk/
+.marduk_atm/
+.marduk_rig/
+phone_mining_logs/
 *.log
-*.log.*
-logs/
 *.out
 *.err
 *.tmp
 *.temp
 
-# Marduk data directories
-.marduk/
-.marduk_atm/
-.marduk_rig/
-phone_mining_logs/
-!.marduk/README.md
-!.marduk_atm/README.md
-!.marduk_rig/README.md
+# Wallet files
+*.wallet
+*.keys
+*.address
+*.secret
+*.seed
+*.mnemonic
+*.priv
+*.private
 
-# Mining configuration (keep examples)
-*.conf
-*.conf.local
-*.config
-!config.example.json
+# Mining configs
+xmrig_config.json
 !xmrig_config.example.json
 
-# Generated bridge and transport files
-latest_bridge.txt
-latest_transport.txt
-slices.out
-slices.tmp
-delivery.log
-resonance_peaks.log
-bridge_hashes.log
-quantum_slices.log
-transactions.log
-failed_deliveries.log
-transporter_stats.log
-
-# Mining earnings and stats
-earnings.log
-stats.log
-temperature.log
-mining.log
-delivery.log
-transport.log
-
-# XMRig build files
+# XMRig build
 xmrig/
 build/
 cmake-build-*/
@@ -117,308 +34,60 @@ cmake-build-*/
 *.dll
 *.exe
 
-# XMRig config (if contains wallet)
-xmrig_config.json
-!xmrig_config.example.json
-
-# Wallet backups and keys
-*.wallet
-*.keys
-*.address
-*.secret
-*.seed
-*.mnemonic
-
-# ============================================================
-# 🐍 Python / General Programming
-# ============================================================
-
 # Python
 __pycache__/
 *.py[cod]
-*$py.class
 *.so
 .Python
 env/
 venv/
-ENV/
-.venv
-pip-log.txt
-pip-delete-this-directory.txt
-.pytest_cache/
-.coverage
-htmlcov/
-.tox/
-.mypy_cache/
-.dmypy.json
-dmypy.json
-*.pyproj
-*.pyi
+.venv/
+*.pyc
+*.pyo
 
-# Node.js / JavaScript
+# Node
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-package-lock.json
-yarn.lock
-.eslintcache
-*.tsbuildinfo
 
-# ============================================================
-# 💻 OS / IDE Specific
-# ============================================================
-
-# Windows
-Thumbs.db
-Thumbs.db:encryptable
-ehthumbs.db
-ehthumbs_vista.db
-*.stackdump
-[Dd]esktop.ini
-$RECYCLE.BIN/
-*.cab
-*.msi
-*.msix
-*.msm
-*.msp
-*.lnk
-
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-*.icloud
-*/.DS_Store
-*/Thumbs.db
-
-# Linux
-*~
-*.swp
-*.swo
-*.swn
-*.bak
-*.tmp
-*.temp
-.directory
-.directory-*
-
-# ============================================================
-# 🛠️ IDE / Editor Specific
-# ============================================================
-
-# VS Code
+# IDE
 .vscode/
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-*.code-workspace
-
-# IntelliJ / WebStorm / PHPStorm
 .idea/
-*.iml
-*.iws
-*.ipr
-out/
-.idea_modules/
-
-# Sublime Text
-*.sublime-project
-*.sublime-workspace
-*.sublime-*
-*.stTheme
-
-# Vim
 *.swp
 *.swo
 *~
-.*.swp
-.*.swo
 
-# Emacs
-*~
-\#*\#
-.\#*
-.elc
+# OS
+.DS_Store
+Thumbs.db
 
-# ============================================================
-# 🗄️ Database / Backup
-# ============================================================
+# Config
+.env
+.env.*
+!.env.example
 
-# SQLite
-*.db
-*.sqlite
-*.sqlite3
-*.db-journal
+# Reports
+*.html
+*.pdf
+*.png
+*.jpg
 
-# PostgreSQL
-*.pgdump
-*.sql
-!schema.sql
-
-# Backups
+# Misc
 *.backup
 *.bak
 *.old
 *.orig
 *.rej
 *.save
-*.tmp
-*~
-
-# Archives
-*.zip
-*.tar.gz
-*.tgz
-*.rar
-*.7z
-*.iso
-*.dmg
-*.pkg
 
 # ============================================================
-# 🔐 Security / Secrets
-# ============================================================
-
-# Secrets and credentials
-*.pem
-*.key
-*.crt
-*.csr
-*.pfx
-*.p12
-*.cert
-*.secret
-*.secrets
-.env
-.env.*
-!.env.example
-secrets/
-credentials/
-keys/
-*.pwd
-*.pass
-*.password
-
-# API keys (if stored in files)
-*_api_key.txt
-*_secret.txt
-*.apikey
-
-# Wallet private keys
-*.priv
-*.private
-*.mnemonic
-*.seed
-
-# ============================================================
-# 📦 Dependencies / Builds
-# ============================================================
-
-# Build outputs
-build/
-dist/
-bin/
-obj/
-lib/
-out/
-target/
-*.class
-*.jar
-*.war
-*.ear
-*.dll
-*.so
-*.dylib
-*.exe
-
-# ============================================================
-# 📊 Test / Coverage
-# ============================================================
-
-# Coverage reports
-coverage/
-.nyc_output/
-*.lcov
-*.lcov.info
-
-# Test artifacts
-*.test
-*.tests
-*.spec
-
-# ============================================================
-# 📱 Mobile / Android Specific
-# ============================================================
-
-# Android build files
-*.apk
-*.aab
-*.dex
-*.odex
-*.vdex
-*.art
-*.oat
-*.jar
-*.class
-gen/
-bin/
-libs/
-obj/
-app/build/
-gradle/
-.gradle/
-local.properties
-*.iml
-.idea/
-.DS_Store
-build/
-captures/
-.externalNativeBuild
-.cxx/
-
-# ============================================================
-# 🖥️ Web / Frontend Specific
-# ============================================================
-
-# Web build outputs
-*.min.js
-*.min.css
-*.map
-dist/
-build/
-static/
-assets/
-*.bundle.js
-*.bundle.css
-
-# ============================================================
-# 📁 Custom User Directories (Add your own)
-# ============================================================
-
-# Add any project-specific paths here
-# Example:
-# my_custom_data/
-# temp_export/
-# *.custom
-
-# ============================================================
-# 📝 NOTES
+# 🔒 PROPRIETARY NOTICE
 # ============================================================
 # 
-# To check what Git will ignore:
-#   git check-ignore -v <filename>
+# MARDUK-TRADING-RIG™ is proprietary software.
+# Unauthorized distribution is strictly prohibited.
 # 
-# To stop ignoring a file:
-#   git add -f <filename>
-# 
-# To see all ignored files:
-#   git status --ignored
+# © 2026 Seliim Ahmed. All Rights Reserved.
 # 
 # ============================================================
