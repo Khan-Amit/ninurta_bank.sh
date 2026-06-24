@@ -17,7 +17,7 @@
     "pools": [
         {
             "url": "xmr-ae.kryptex.network:7029",
-            "user": "44osUR6e9UjePWUQhavLNYTY7JSzwZMN6249AdnjbwmtXtirsjDiGcejCjJkoTst2BGD3NaLrtpzNENsc6AsZ9AGKWTx7YZ",
+            "user": "45ktWDeTNtUcVMXfJRKS6bbXMznMAStZFX6niJHcVy9uQk132bHJ21QTC5AKvqyx9XJN5e7mPc3vViyGnB2BM6DD1ZoAoZb",
             "pass": "ninurta_rig",
             "tls": true,
             "keepalive": true,
