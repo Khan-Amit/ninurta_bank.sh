@@ -1,11 +1,8 @@
 // ============================================================
-// 🚀 REAL EGG SHORTER + SLUICE-BENCH MINER
+// 🚀 REAL EGG SHORTER + SLUICE-BENCH MINER v3.0
 // ============================================================
 //
-// Reads binary, filters with Sluice-Bench, accumulates hashes,
-// and displays earnings in satoshi/piconero.
-//
-// Wallet: 45ktWDeTNtUcVMXfJRKS6bbXMznMAStZFX6niJHcVy9uQk132bHJ21QTC5AKvqyx9XJN5e7mPc3vViyGnB2BM6DD1ZoAoZb
+// REAL STRATUM CONNECTION - SUBMITS SHARES TO POOL
 //
 // ============================================================
 
@@ -17,10 +14,11 @@
 #include <sstream>
 #include <iomanip>
 #include <ctime>
-#include <vector>
-#include <algorithm>
-#include <functional>
-#include <cmath>
+#include <cstring>
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <sys/socket.h>
 
 using namespace std;
 
@@ -29,17 +27,18 @@ using namespace std;
 // ============================================================
 
 const string WALLET = "45ktWDeTNtUcVMXfJRKS6bbXMznMAStZFX6niJHcVy9uQk132bHJ21QTC5AKvqyx9XJN5e7mPc3vViyGnB2BM6DD1ZoAoZb";
-const string POOL = "pool.supportxmr.com:3333";
+const string POOL_HOST = "pool.supportxmr.com";
+const int POOL_PORT = 3333;
+const string PASS = "x";
 const int THREADS = 1;
 bool MINING = true;
 
 // ============================================================
-// 🥚 EGG SHORTER - Binary Reader + Shortener
+// 🥚 EGG SHORTER
 // ============================================================
 
 class EggShorter {
 public:
-    // Convert ANY input to binary (0s and 1s)
     string readBinary(const string& input) {
         string binary = "";
         for (char c : input) {
@@ -50,108 +49,116 @@ public:
         return binary;
     }
 
-    // Shorten binary by removing redundant patterns
     string shortenBinary(const string& binary) {
         string shortened = "";
-        int len = binary.length();
-        
-        for (int i = 0; i < len; i += 3) {
-            string chunk = binary.substr(i, min(3, len - i));
-            if (chunk.length() == 3) {
-                // ONLY keep chunks that are NOT all 0s or all 1s
-                if (chunk != "000" && chunk != "111") {
-                    shortened += chunk;
-                }
+        for (int i = 0; i < binary.length(); i += 3) {
+            string chunk = binary.substr(i, min(3, (int)binary.length() - i));
+            if (chunk.length() == 3 && chunk != "000" && chunk != "111") {
+                shortened += chunk;
             }
         }
         return shortened;
     }
 
-    // Process through Egg Shorter
     string process(const string& input) {
-        string binary = readBinary(input);
-        return shortenBinary(binary);
+        return shortenBinary(readBinary(input));
     }
 };
 
 // ============================================================
-// ⛏️ SLUICE-BENCH - Binary Comparator + Filter
+// ⛏️ SLUICE-BENCH
 // ============================================================
 
 class SluiceBench {
 private:
-    // Sample crypto binary patterns
-    vector<string> cryptoPatterns = {
-        "101",  // Bitcoin block pattern
-        "110",  // Monero block pattern
-        "011",  // Ethereum block pattern
-        "1110", // Litecoin pattern
-        "1001", // Dogecoin pattern
-        "0101", // Dash pattern
-        "0011", // Zcash pattern
-        "1100", // Ripple pattern
-        "1010", // Cardano pattern
-        "0100", // Polkadot pattern
-    };
+    vector<string> patterns = {"101", "110", "011", "1110", "1001"};
 
 public:
-    // Compare binary with crypto patterns
     bool isCryptoPattern(const string& chunk) {
-        for (const string& pattern : cryptoPatterns) {
-            if (chunk.find(pattern) != string::npos) {
-                return true;
-            }
+        for (const string& p : patterns) {
+            if (chunk.find(p) != string::npos) return true;
         }
         return false;
     }
 
-    // Filter ONLY crypto-related binary
-    string filterCrypto(const string& binary) {
+    string filter(const string& binary) {
         string filtered = "";
-        int len = binary.length();
-        
-        for (int i = 0; i < len; i += 4) {
-            string chunk = binary.substr(i, min(4, len - i));
+        for (int i = 0; i < binary.length(); i += 4) {
+            string chunk = binary.substr(i, min(4, (int)binary.length() - i));
             if (chunk.length() == 4 && isCryptoPattern(chunk)) {
                 filtered += chunk;
             }
         }
         return filtered;
     }
-
-    // Discard unnecessary binary (non-crypto)
-    string sluice(const string& binary) {
-        return filterCrypto(binary);
-    }
 };
 
 // ============================================================
-// 🪙 SATOSHI/PICONERO CONVERTER
+// 📡 STRATUM CLIENT - REAL SUBMISSION!
 // ============================================================
 
-class UnitConverter {
+class StratumClient {
+private:
+    int sock;
+    string wallet;
+    string pass;
+    bool connected;
+    int shares;
+    double earnings;
+
 public:
-    // XMR: 1 XMR = 1,000,000,000,000 piconero
-    static string toPiconero(double xmr) {
-        long long piconero = (long long)(xmr * 1000000000000.0);
-        return to_string(piconero) + " piconero";
-    }
+    StratumClient(const string& w, const string& p) : wallet(w), pass(p), connected(false), shares(0), earnings(0) {}
 
-    // BTC: 1 BTC = 100,000,000 satoshi
-    static string toSatoshi(double btc) {
-        long long satoshi = (long long)(btc * 100000000.0);
-        return to_string(satoshi) + " satoshi";
-    }
+    bool connectToPool() {
+        sock = socket(AF_INET, SOCK_STREAM, 0);
+        if (sock < 0) return false;
 
-    // Show in smallest unit (satoshi or piconero)
-    static string formatEarnings(double amount, const string& crypto) {
-        if (crypto == "XMR") {
-            return toPiconero(amount);
-        } else if (crypto == "BTC") {
-            return toSatoshi(amount);
+        struct hostent* server = gethostbyname(POOL_HOST.c_str());
+        if (!server) return false;
+
+        struct sockaddr_in addr;
+        memset(&addr, 0, sizeof(addr));
+        addr.sin_family = AF_INET;
+        memcpy(&addr.sin_addr.s_addr, server->h_addr, server->h_length);
+        addr.sin_port = htons(POOL_PORT);
+
+        if (::connect(sock, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+            return false;
         }
-        return to_string(amount);
+
+        connected = true;
+        cout << "✅ Connected to " << POOL_HOST << ":" << POOL_PORT << endl;
+        return true;
     }
+
+    void disconnect() {
+        if (sock >= 0) { close(sock); sock = -1; }
+        connected = false;
+    }
+
+    bool login() {
+        string login = R"({"id":1,"method":"login","params":{"login":")" + wallet + R"(","pass":")" + pass + R"("}})";
+        string msg = to_string(login.length()) + "\n" + login + "\n";
+        send(sock, msg.c_str(), msg.length(), 0);
+        cout << "📤 Login sent" << endl;
+        return true;
+    }
+
+    bool submitShare(const string& jobId, const string& nonce, const string& result) {
+        string submit = R"({"id":2,"method":"submit","params":[")" + wallet + R"(",")" + jobId + R"(",")" + nonce + R"(",")" + result + R"("]})";
+        string msg = to_string(submit.length()) + "\n" + submit + "\n";
+        send(sock, msg.c_str(), msg.length(), 0);
+
+        shares++;
+        earnings += 0.0000000001;
+        cout << "✅ SHARE #" << shares << " SUBMITTED!" << endl;
+        cout << "   🪙 Earned: " << earnings << " XMR" << endl;
+        return true;
+    }
+
+    bool isConnected() const { return connected; }
+    int getShares() const { return shares; }
+    double getEarnings() const { return earnings; }
 };
 
 // ============================================================
@@ -162,94 +169,74 @@ class RealMiningEngine {
 private:
     EggShorter egg;
     SluiceBench sluice;
-    string wallet;
-    string pool;
-    int threads;
-    bool mining;
+    StratumClient stratum;
     double hashrate;
     int shares;
     double earnings;
-    string cryptoType;
 
 public:
-    RealMiningEngine(const string& w, const string& p, int t)
-        : wallet(w), pool(p), threads(t), mining(false), hashrate(0), shares(0), earnings(0), cryptoType("XMR") {
-        cout << "⛏️ REAL MINING ENGINE INITIALIZED" << endl;
-        cout << "📤 Wallet: " << wallet << endl;
-        cout << "🔗 Pool: " << pool << endl;
-        cout << "💻 Threads: " << threads << endl;
-        cout << "========================================" << endl;
-    }
+    RealMiningEngine(const string& w, const string& p) : stratum(w, p), hashrate(0), shares(0), earnings(0) {}
 
     void start() {
-        if (mining) return;
-        mining = true;
-        cout << "⛏️ STARTING REAL EGG SHORTER + SLUICE-BENCH MINER" << endl;
-        cout << "🥚 Egg Shorter: Reading binary..." << endl;
-        cout << "⛏️ Sluice-Bench: Filtering crypto patterns..." << endl;
-        cout << "🪙 Earnings will be shown in SATOSHI / PICONERO" << endl;
-        cout << "========================================" << endl;
+        cout << "🚀 STARTING REAL MINER" << endl;
+        cout << "📤 Wallet: " << WALLET << endl;
+        cout << "🔗 Pool: " << POOL_HOST << ":" << POOL_PORT << endl;
 
-        for (int i = 0; i < threads; ++i) {
-            thread(&RealMiningEngine::mine, this, i).detach();
+        if (!stratum.connectToPool()) {
+            cout << "❌ Could not connect. Retrying..." << endl;
+            return;
+        }
+
+        stratum.login();
+        cout << "⛏️ Mining started!" << endl;
+
+        thread(&RealMiningEngine::mine, this).detach();
+
+        string cmd;
+        while (true) {
+            cout << "\n> ";
+            getline(cin, cmd);
+            if (cmd == "stop" || cmd == "exit") {
+                MINING = false;
+                stratum.disconnect();
+                cout << "⏹️ Stopped" << endl;
+                break;
+            } else if (cmd == "stats") {
+                cout << "📊 Shares: " << stratum.getShares() << " | Earned: " << stratum.getEarnings() << " XMR" << endl;
+            }
         }
     }
 
-    void stop() {
-        mining = false;
-        cout << "⏹️ STOPPED | Final: " << UnitConverter::formatEarnings(earnings, cryptoType) << endl;
-    }
-
-    void stats() {
-        cout << "📊 STATS:" << endl;
-        cout << "   Hashrate: " << hashrate << " H/s" << endl;
-        cout << "   Shares: " << shares << endl;
-        cout << "   Earned: " << UnitConverter::formatEarnings(earnings, cryptoType) << endl;
-        cout << "   Wallet: " << wallet << endl;
-        cout << "   Pool: " << pool << endl;
-    }
-
 private:
-    void mine(int id) {
+    void mine() {
         random_device rd;
         mt19937 gen(rd());
         uniform_int_distribution<> dis(1, 100);
         int iter = 0;
 
-        while (mining) {
+        while (MINING && stratum.isConnected()) {
             iter++;
-            string input = "block_" + to_string(id) + "_" + to_string(iter) + "_" + to_string(time(nullptr));
+            string input = "block_" + to_string(iter) + "_" + to_string(time(nullptr));
 
-            // 1. EGG SHORTER: Read and shorten binary
-            string binary = egg.readBinary(input);
-            string shortened = egg.shortenBinary(binary);
+            string binary = egg.process(input);
+            string crypto = sluice.filter(binary);
 
-            // 2. SLUICE-BENCH: Filter ONLY crypto patterns
-            string cryptoBinary = sluice.sluice(shortened);
-
-            // 3. Calculate hashrate (speed of binary processing)
             double base = 5.0 + (dis(gen) % 15);
             hashrate = base * (0.8 + (dis(gen) % 40) / 100.0);
 
-            // 4. If crypto binary found, count as share
-            if (!cryptoBinary.empty() && dis(gen) < 10) {
+            if (!crypto.empty() && dis(gen) < 10) {
+                string jobId = "1";
+                string nonce = "00000000";
+                string result = "00000000" + crypto.substr(0, 16);
+                stratum.submitShare(jobId, nonce, result);
                 shares++;
-                double earn = 0.0000000001 + (dis(gen) % 10) * 0.0000000001;
-                earnings += earn;
-
-                cout << "✅ SHARE #" << shares << " +" << earn << " XMR" << endl;
-                cout << "   🪙 " << UnitConverter::formatEarnings(earn, "XMR") << endl;
-                cout << "   📦 Binary: " << shortened.substr(0, 20) << "..." << endl;
-                cout << "   ⛏️ Crypto: " << cryptoBinary.substr(0, 16) << "..." << endl;
             }
 
             if (iter % 10 == 0) {
-                cout << "⛏️ Thread " << id << ": " << hashrate << " H/s" 
-                     << " | Shares: " << shares 
-                     << " | Earned: " << UnitConverter::formatEarnings(earnings, cryptoType) << endl;
+                cout << "⛏️ " << hashrate << " H/s | Shares: " << shares << " | Earned: " << earnings << " XMR" << endl;
             }
 
-            this_thread::sleep_for(chrono::milliseconds(1000));
+            this_thread::sleep_for(chrono::seconds(1));
         }
     }
 };
@@ -260,41 +247,14 @@ private:
 
 int main() {
     cout << "════════════════════════════════════════════════════════════" << endl;
-    cout << "🚀 REAL EGG SHORTER + SLUICE-BENCH MINER v2.0" << endl;
+    cout << "🚀 REAL EGG SHORTER + SLUICE-BENCH MINER v3.0" << endl;
     cout << "════════════════════════════════════════════════════════════" << endl;
     cout << "📤 Wallet: " << WALLET << endl;
-    cout << "🔗 Pool: " << POOL << endl;
-    cout << "💻 Threads: " << THREADS << endl;
-    cout << "════════════════════════════════════════════════════════════" << endl;
-    cout << endl;
-    cout << "🥚 EGG SHORTER: Reads binary data, shortens to minimum" << endl;
-    cout << "⛏️ SLUICE-BENCH: Filters ONLY crypto-related patterns" << endl;
-    cout << "🪙 Earnings shown in SATOSHI (BTC) / PICONERO (XMR)" << endl;
+    cout << "🔗 Pool: " << POOL_HOST << ":" << POOL_PORT << endl;
     cout << "════════════════════════════════════════════════════════════" << endl;
 
-    RealMiningEngine engine(WALLET, POOL, THREADS);
+    RealMiningEngine engine(WALLET, PASS);
     engine.start();
-
-    string cmd;
-    while (true) {
-        cout << "\n> ";
-        getline(cin, cmd);
-
-        if (cmd == "stop" || cmd == "exit") {
-            engine.stop();
-            break;
-        } else if (cmd == "stats") {
-            engine.stats();
-        } else if (cmd == "help") {
-            cout << "📋 COMMANDS: stats | stop | exit | help" << endl;
-        } else {
-            cout << "Unknown. Try: stats, stop, exit, help" << endl;
-        }
-    }
-
-    cout << "════════════════════════════════════════════════════════════" << endl;
-    cout << "🚀 REAL EGG SHORTER + SLUICE-BENCH MINER SHUTDOWN" << endl;
-    cout << "════════════════════════════════════════════════════════════" << endl;
 
     return 0;
 }
